@@ -97,7 +97,7 @@ local function createButton(text, callback)
     return b
 end
 
-createButton("HYPER SPEED: 1000", function()
+createButton("HYPER SPEED: 700", function()
     if player.Character and player.Character:FindFirstChild("Humanoid") then
         player.Character.Humanoid.WalkSpeed = 1000
         boosting = true -- İtişi açar
