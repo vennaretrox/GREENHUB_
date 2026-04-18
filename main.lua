@@ -12,7 +12,7 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_FORSAKEN_GOD_V11"
+gui.Name = "GREENHUB_FORSAKEN_GOD_V12"
 
 --------------------------------------------------
 -- LOGO & DRAG SYSTEM (SAF KOYU YEŞİL)
@@ -115,55 +115,57 @@ createButton("Anti-Attack: OFF", function(self)
 end)
 
 --------------------------------------------------
--- DUAL-PATH REGEN & ULTRA UPGRADE
+-- PROXIMITY SHIELD & DUAL REGEN
 --------------------------------------------------
 
--- 1. YOL (Stepped): Çift milisaniyelerde çalışır, Eklemleri korur
+-- 1. YOL (Stepped): ProximityPrompt ve Eklem Koruması
 RunService.Stepped:Connect(function()
     if antiAttackActive and player.Character then
         local hum = player.Character:FindFirstChildOfClass("Humanoid")
         if hum then
-            -- HASAR GELDİĞİ ANDA +10 CAN SPAM (YOL A)
-            if hum.Health < 100 then
-                hum.Health = math.min(100, hum.Health + 10)
-            end
+            -- Can Kilidi
+            if hum.Health < 100 then hum.Health = 100 end
             hum.BreakJointsOnDeath = false
             hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
         end
-        for _, p in pairs(player.Character:GetChildren()) do
-            if p:IsA("BasePart") then p.CanTouch = false end
+        
+        -- PROXIMITY SHIELD: Çevredeki tüm "Öldür" butonlarını kapatır
+        for _, v in pairs(game.Workspace:GetDescendants()) do
+            if v:IsA("ProximityPrompt") then
+                -- Eğer buton senin üzerinde veya katilin elindeyse onu kapatır
+                v.Enabled = false 
+            end
         end
     end
 end)
 
--- 2. YOL (Heartbeat): Tek milisaniyelerde çalışır, Hızı yönetir
+-- 2. YOL (Heartbeat): Hız ve Anti-Void
 RunService.Heartbeat:Connect(function()
     local char = player.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
         local hrp = char.HumanoidRootPart
         local hum = char:FindFirstChildOfClass("Humanoid")
         
-        -- HIZ SİSTEMİ (1.8 Çarpanı)
+        -- HIZ (1.8 Çarpanı)
         if hyperActive and hum and hum.MoveDirection.Magnitude > 0 then
             hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         end
         
-        -- HASAR GELDİĞİ ANDA +10 CAN SPAM (YOL B)
-        if antiAttackActive and hum then
-            if hum.Health < 100 then
-                hum.Health = math.min(100, hum.Health + 10)
-            end
-            -- Anti-Void (Harita altına düşme)
-            if hrp.Position.Y < -40 then
-                hrp.Velocity = Vector3.new(0, 0, 0)
-                hrp.CFrame = CFrame.new(hrp.Position.X, 20, hrp.Position.Z)
-            end
+        -- İkinci Can Spamı
+        if antiAttackActive and hum and hum.Health < 100 then
+            hum.Health = 100
+        end
+
+        -- Anti-Void
+        if hrp.Position.Y < -40 then
+            hrp.Velocity = Vector3.new(0, 0, 0)
+            hrp.CFrame = CFrame.new(hrp.Position.X, 20, hrp.Position.Z)
         end
     end
 end)
 
 --------------------------------------------------
--- TOGGLE & LOGO ANIMATION (KOYU YEŞİL)
+-- TOGGLE & LOGO ANIMATION (SAF YEŞİL)
 --------------------------------------------------
 btn.MouseButton1Click:Connect(function()
     menu.Visible = not menu.Visible
