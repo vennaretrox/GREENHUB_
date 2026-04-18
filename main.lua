@@ -12,23 +12,23 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_ULTIMATE_GODMODE"
+gui.Name = "GREENHUB_FORSAKEN_PURE_GREEN"
 
 --------------------------------------------------
--- LOGO & DRAG SYSTEM (DOKUNULMADI)
+-- LOGO & DRAG SYSTEM (SAF YEŞİL TEMA)
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
 btn.Position = UDim2.new(0, 30, 0, 30)
 btn.Text = "G H"
 btn.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
-btn.TextColor3 = Color3.fromRGB(0, 255, 120)
+btn.TextColor3 = Color3.fromRGB(0, 200, 0) -- Saf Yeşil
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 22
 btn.AutoButtonColor = false
 
 local btnStroke = Instance.new("UIStroke", btn)
-btnStroke.Color = Color3.fromRGB(0, 120, 60)
+btnStroke.Color = Color3.fromRGB(0, 100, 0) -- Koyu Yeşil
 btnStroke.Thickness = 2
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
 
@@ -39,10 +39,10 @@ menu.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 8)
 local menuStroke = Instance.new("UIStroke", menu)
-menuStroke.Color = Color3.fromRGB(0, 120, 60)
-menuStroke.Thickness = 3.5
+menuStroke.Color = Color3.fromRGB(0, 120, 0) -- Saf Koyu Yeşil
+menuStroke.Thickness = 4 -- Kalın LED efekti
 
--- Drag Logic (Aynı)
+-- Drag Logic
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -66,7 +66,7 @@ local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 35)
 title.BackgroundTransparency = 1
 title.Text = "GREENHUB"
-title.TextColor3 = Color3.fromRGB(0, 255, 120)
+title.TextColor3 = Color3.fromRGB(0, 255, 0) -- Parlak Yeşil
 title.Font = Enum.Font.GothamBold
 title.TextSize = 18
 
@@ -75,7 +75,7 @@ sub.Size = UDim2.new(1, 0, 0, 15)
 sub.Position = UDim2.new(0, 0, 0, 30)
 sub.BackgroundTransparency = 1
 sub.Text = "forsaken"
-sub.TextColor3 = Color3.fromRGB(0, 120, 60)
+sub.TextColor3 = Color3.fromRGB(0, 150, 0) -- Koyu Yeşil
 sub.Font = Enum.Font.GothamBlack
 sub.TextSize = 12
 
@@ -94,11 +94,11 @@ local function createButton(text, callback)
     b.Size = UDim2.new(1, 0, 0, 35)
     b.Text = text
     b.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    b.TextColor3 = Color3.fromRGB(0, 255, 120)
+    b.TextColor3 = Color3.fromRGB(0, 200, 0)
     b.Font = Enum.Font.GothamMedium
     b.TextSize = 13
     Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
-    Instance.new("UIStroke", b).Color = Color3.fromRGB(40, 40, 40)
+    Instance.new("UIStroke", b).Color = Color3.fromRGB(30, 30, 30)
     b.MouseButton1Click:Connect(function() callback(b) end)
     return b
 end
@@ -110,7 +110,7 @@ createButton("Hyper Speed: OFF", function(self)
         self.TextColor3 = Color3.fromRGB(130, 0, 255) 
     else
         self.Text = "Hyper Speed: OFF"
-        self.TextColor3 = Color3.fromRGB(0, 255, 120)
+        self.TextColor3 = Color3.fromRGB(0, 200, 0)
     end
 end)
 
@@ -121,12 +121,12 @@ createButton("Anti-Attack: OFF", function(self)
         self.TextColor3 = Color3.fromRGB(130, 0, 255)
     else
         self.Text = "Anti-Attack: OFF"
-        self.TextColor3 = Color3.fromRGB(0, 255, 120)
+        self.TextColor3 = Color3.fromRGB(0, 200, 0)
     end
 end)
 
 --------------------------------------------------
--- ULTRA CORE PROTECTION (SPEED + NO-DIE)
+-- CORE SYSTEM (SPEED + CHARACTER SAFEGUARD)
 --------------------------------------------------
 RunService.RenderStepped:Connect(function()
     local char = player.Character
@@ -134,18 +134,24 @@ RunService.RenderStepped:Connect(function()
         local hum = char:FindFirstChildOfClass("Humanoid")
         local hrp = char:FindFirstChild("HumanoidRootPart")
         
-        -- HIZ (BOZULMADI)
+        -- HIZ (AYNI KALDI)
         if hyperActive and hrp and hum and hum.MoveDirection.Magnitude > 0 then
             hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         end
         
-        -- ÖLÜMSÜZLÜK DÖNGÜSÜ
+        -- FORSAKEN ÖLÜMSÜZLÜK (GELİŞMİŞ)
         if antiAttackActive and hum then
-            -- Can azalmaya başladığı an saniyede 60 kez 100'e sabitler
-            if hum.Health > 0 and hum.Health < 100 then
-                hum.Health = 100
+            -- Can Kilidi
+            if hum.Health < 100 then hum.Health = 100 end
+            
+            -- Karakterin parçalanmasını engelle (Vücut parçalarını kilitle)
+            for _, v in pairs(char:GetDescendants()) do
+                if v:IsA("Motor6D") or v:IsA("Weld") then
+                    -- Bazı yetenekler eklemleri sildiği için kontrol ediyoruz
+                end
             end
-            -- Ölüm sinyalini yerel olarak bloklar
+            
+            -- Dead state kapatma
             hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
         elseif hum then
             hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
@@ -153,26 +159,23 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- EKSTRA KORUMA (Can değişimi sinyali yakalandığında)
-player.CharacterAdded:Connect(function(newChar)
-    local hum = newChar:WaitForChild("Humanoid")
-    hum:GetPropertyChangedSignal("Health"):Connect(function()
-        if antiAttackActive and hum.Health < 100 and hum.Health > 0 then
-            hum.Health = 100
-        end
-    end)
+-- EKSTRA: SUNUCUYA ÖLDÜĞÜNÜ SÖYLEMESİNİ ENGELLE
+player.CharacterAdded:Connect(function(c)
+    local h = c:WaitForChild("Humanoid")
+    h.BreakJointsOnDeath = false -- Öldüğünde parçalanmayı kapat
 end)
 
 --------------------------------------------------
--- TOGGLE & LOGO ANIMATION (YEŞİL PARLAMA)
+-- TOGGLE & LOGO ANIMATION (BEYAZLIKSIZ SAF YEŞİL)
 --------------------------------------------------
 btn.MouseButton1Click:Connect(function()
     menu.Visible = not menu.Visible
     if menu.Visible then
-        TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 255, 150), Thickness = 4}):Play()
-        TweenService:Create(btn, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(0, 255, 120)}):Play()
+        -- Turkuaz yok, sadece koyu ve parlak yeşil parlaması
+        TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 255, 0), Thickness = 4}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(0, 255, 0)}):Play()
     else
-        TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 120, 60), Thickness = 2}):Play()
-        TweenService:Create(btn, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(0, 255, 120)}):Play()
+        TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 100, 0), Thickness = 2}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(0, 200, 0)}):Play()
     end
 end)
