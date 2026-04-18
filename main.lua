@@ -2,17 +2,18 @@
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
-local boosting = false -- Arkadan itiş kontrolü
+local boosting = false
 
--- GUI CONTAINER
+-- GUI
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_HYPER"
+gui.Name = "GREENHUB_FORSAKEN"
 
 --------------------------------------------------
--- LOGO & DRAG SYSTEM (Stabilize Edildi)
+-- LOGO & DRAG SYSTEM
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
@@ -22,22 +23,22 @@ btn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 btn.TextColor3 = Color3.fromRGB(0, 255, 120)
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 22
+btn.AutoButtonColor = false
 
-Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
 local btnStroke = Instance.new("UIStroke", btn)
 btnStroke.Color = Color3.fromRGB(0, 120, 60)
 btnStroke.Thickness = 2
+Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
 
 local menu = Instance.new("Frame", gui)
-menu.Size = UDim2.fromOffset(220, 250)
+menu.Size = UDim2.fromOffset(220, 200)
 menu.Position = UDim2.new(0, 30, 0, 95)
 menu.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 menu.Visible = false
-
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 8)
 Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 120, 60)
 
--- Sürükleme Mantığı
+-- Sürükleme Sistemi
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -61,22 +62,28 @@ UIS.InputEnded:Connect(function(input)
 end)
 
 --------------------------------------------------
--- ARKADAN İTİŞ (THRUST) SİSTEMİ
+-- SAFE CHAT & FEATURES
 --------------------------------------------------
+-- Chat Killer (Güvenli Mod: Atılmayı önlemek için sadece arayüzü manipüle eder)
+local function safeChatKiller()
+    local chatGui = player.PlayerGui:FindFirstChild("Chat")
+    if chatGui then chatGui.Enabled = not chatGui.Enabled end
+end
+
+-- Minimalist Boost (Arkadan İtiş)
 RunService.RenderStepped:Connect(function()
     if boosting and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         local hrp = player.Character.HumanoidRootPart
         local hum = player.Character.Humanoid
-        
-        -- Eğer hareket ediyorsa arkadan ekstra kuvvet uygula
         if hum.MoveDirection.Magnitude > 0 then
-            hrp.Velocity = hrp.Velocity + (hum.MoveDirection * 20) -- İvme kazandırır
+            -- Boost çok azaltıldı (Anti-kick ayarı)
+            hrp.Velocity = hrp.Velocity + (hum.MoveDirection * 1.5) 
         end
     end
 end)
 
 --------------------------------------------------
--- BUTTONS & SCROLL
+-- UI COMPONENTS
 --------------------------------------------------
 local scroll = Instance.new("ScrollingFrame", menu)
 scroll.Size = UDim2.new(1, -16, 1, -20)
@@ -91,29 +98,48 @@ local function createButton(text, callback)
     b.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     b.TextColor3 = Color3.fromRGB(0, 200, 100)
     b.Font = Enum.Font.Gotham
-    b.TextSize = 14
+    b.TextSize = 13
     Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
     b.MouseButton1Click:Connect(callback)
     return b
 end
 
-createButton("HYPER SPEED: 700", function()
-    if player.Character and player.Character:FindFirstChild("Humanoid") then
-        player.Character.Humanoid.WalkSpeed = 1000
-        boosting = true -- İtişi açar
+-- Speed Toggle (Aç/Kapat)
+local speedActive = false
+local speedBtn = createButton("Turbo Speed: OFF", function()
+    speedActive = not speedActive
+    if speedActive then
+        boosting = true
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = 550
+        end
+        scroll:FindFirstChild("Turbo Speed: OFF").Text = "Turbo Speed: ON"
+    else
+        boosting = false
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = 16
+        end
+        scroll:FindFirstChild("Turbo Speed: ON").Text = "Turbo Speed: OFF"
     end
 end)
 
-createButton("Stop Boost", function()
-    boosting = false
-    if player.Character and player.Character:FindFirstChild("Humanoid") then
-        player.Character.Humanoid.WalkSpeed = 16
-    end
+createButton("Toggle Chat View", function()
+    safeChatKiller()
 end)
 
 --------------------------------------------------
--- TOGGLE
+-- TOGGLE LOGIC & ANIMATION
 --------------------------------------------------
 btn.MouseButton1Click:Connect(function()
     menu.Visible = not menu.Visible
+    
+    if menu.Visible then
+        -- Aydınlık Animasyonu
+        TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(20, 20, 20), TextColor3 = Color3.fromRGB(0, 255, 150)}):Play()
+        TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 255, 120), Thickness = 3}):Play()
+    else
+        -- Normal Haline Dönüş
+        TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(10, 10, 10), TextColor3 = Color3.fromRGB(0, 255, 120)}):Play()
+        TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 120, 60), Thickness = 2}):Play()
+    end
 end)
