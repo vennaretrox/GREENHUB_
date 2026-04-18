@@ -123,7 +123,7 @@ end
 --------------------------------------------------
 -- FEATURES
 --------------------------------------------------
-createButton("Speed: 357", function()
+createButton("Speed: 600", function()
     if player.Character and player.Character:FindFirstChild("Humanoid") then
         player.Character.Humanoid.WalkSpeed = 350
     end
