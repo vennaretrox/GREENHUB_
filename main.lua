@@ -12,10 +12,10 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_FORSAKEN_SHIELD"
+gui.Name = "GREENHUB_FORSAKEN_GOD_EDITION"
 
 --------------------------------------------------
--- LOGO & DRAG SYSTEM
+-- LOGO & DRAG SYSTEM (DEĞİŞİKLİK YOK)
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
@@ -25,7 +25,6 @@ btn.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
 btn.TextColor3 = Color3.fromRGB(0, 255, 120)
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 22
-btn.AutoButtonColor = false
 
 local btnStroke = Instance.new("UIStroke", btn)
 btnStroke.Color = Color3.fromRGB(0, 120, 60)
@@ -42,7 +41,7 @@ local menuStroke = Instance.new("UIStroke", menu)
 menuStroke.Color = Color3.fromRGB(0, 120, 60)
 menuStroke.Thickness = 3.5
 
--- Drag Logic (Dokunulmadı)
+-- Drag Logic
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -60,7 +59,7 @@ end)
 UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 
 --------------------------------------------------
--- TITLE & SUBTITLE
+-- TITLE & SUBTITLE (AYNI KALDI)
 --------------------------------------------------
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 35)
@@ -126,41 +125,47 @@ createButton("Anti-Attack: OFF", function(self)
 end)
 
 --------------------------------------------------
--- CORE LOOPS (SPEED + GOD SHIELD)
+-- CORE LOOPS (SPEED + FORSAKEN ABILITY SHIELD)
 --------------------------------------------------
+local lastHealth = 100
+
 RunService.RenderStepped:Connect(function()
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = player.Character.HumanoidRootPart
-        local hum = player.Character.Humanoid
+    local char = player.Character
+    if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") then
+        local hrp = char.HumanoidRootPart
+        local hum = char.Humanoid
         
-        -- HIZ SİSTEMİ (BOZULMADI)
+        -- HIZ SİSTEMİ (TIPI TIP AYNI)
         if hyperActive and hum.MoveDirection.Magnitude > 0 then
             hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         end
         
-        -- MUTLAK HASAR ENGELLEYİCİ (5 METRE)
+        -- ANTI-ATTACK (YETENEK VE HASAR ENGELLEME)
         if antiAttackActive then
-            for _, otherPlayer in pairs(Players:GetPlayers()) do
-                if otherPlayer ~= player and otherPlayer.Character then
-                    local otherHrp = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
-                    if otherHrp then
-                        local dist = (hrp.Position - otherHrp.Position).Magnitude
-                        if dist <= 25 then -- 5 Metre
-                            -- 1. Silahı çantaya geri yolla
-                            local tool = otherPlayer.Character:FindFirstChildOfClass("Tool")
-                            if tool then tool.Parent = otherPlayer.Backpack end
-                            
-                            -- 2. Temas hasarını engelle (TouchInterest silme/devre dışı bırakma)
-                            for _, part in pairs(otherPlayer.Character:GetChildren()) do
-                                if part:IsA("BasePart") then
-                                    local touch = part:FindFirstChildOfClass("TouchTransmitter")
-                                    if touch then touch:Destroy() end -- Hasar algılamasını o anlık koparır
-                                end
-                            end
+            -- 1. Can Sabitleme (Hasarı yerel olarak reddeder)
+            if hum.Health < lastHealth then
+                hum.Health = lastHealth
+            end
+            lastHealth = hum.Health
+            
+            -- 2. Yakın Çevre Temas Engelleyici
+            for _, other in pairs(Players:GetPlayers()) do
+                if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
+                    local dist = (hrp.Position - other.Character.HumanoidRootPart.Position).Magnitude
+                    if dist <= 25 then
+                        -- Katilin yetenek tetikleyicilerini (Hitbox) kapatır
+                        for _, part in pairs(other.Character:GetChildren()) do
+                            if part:IsA("BasePart") then part.CanTouch = false end
+                        end
+                    else
+                        for _, part in pairs(other.Character:GetChildren()) do
+                            if part:IsA("BasePart") then part.CanTouch = true end
                         end
                     end
                 end
             end
+        else
+            lastHealth = hum.Health
         end
     end
 end)
@@ -171,7 +176,6 @@ end)
 btn.MouseButton1Click:Connect(function()
     menu.Visible = not menu.Visible
     if menu.Visible then
-        -- İçinde beyazlık yok, sadece parlak yeşil yazı ve kenarlık
         TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 255, 150), Thickness = 4}):Play()
         TweenService:Create(btn, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(0, 255, 120)}):Play()
     else
