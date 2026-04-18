@@ -12,7 +12,7 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_FORSAKEN_GOD_V12"
+gui.Name = "GREENHUB_V13_LAG_FREE"
 
 --------------------------------------------------
 -- LOGO & DRAG SYSTEM (SAF KOYU YEŞİL)
@@ -41,7 +41,7 @@ local menuStroke = Instance.new("UIStroke", menu)
 menuStroke.Color = Color3.fromRGB(0, 120, 0)
 menuStroke.Thickness = 4 
 
--- Drag Logic
+-- Drag Logic (Optimize Edildi)
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -51,9 +51,8 @@ end)
 UIS.InputChanged:Connect(function(input)
     if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
         local delta = input.Position - dragStart
-        local nPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        btn.Position = nPos
-        menu.Position = UDim2.new(nPos.X.Scale, nPos.X.Offset, nPos.Y.Scale, nPos.Y.Offset + 65)
+        btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 65)
     end
 end)
 UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
@@ -115,48 +114,44 @@ createButton("Anti-Attack: OFF", function(self)
 end)
 
 --------------------------------------------------
--- PROXIMITY SHIELD & DUAL REGEN
+-- LAG-FREE SMART PROTECTION
 --------------------------------------------------
 
--- 1. YOL (Stepped): ProximityPrompt ve Eklem Koruması
-RunService.Stepped:Connect(function()
-    if antiAttackActive and player.Character then
-        local hum = player.Character:FindFirstChildOfClass("Humanoid")
-        if hum then
-            -- Can Kilidi
-            if hum.Health < 100 then hum.Health = 100 end
-            hum.BreakJointsOnDeath = false
-            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-        end
-        
-        -- PROXIMITY SHIELD: Çevredeki tüm "Öldür" butonlarını kapatır
-        for _, v in pairs(game.Workspace:GetDescendants()) do
-            if v:IsA("ProximityPrompt") then
-                -- Eğer buton senin üzerinde veya katilin elindeyse onu kapatır
-                v.Enabled = false 
-            end
-        end
-    end
-end)
-
--- 2. YOL (Heartbeat): Hız ve Anti-Void
+-- Koruma Döngüsü (Hafifletilmiş)
 RunService.Heartbeat:Connect(function()
     local char = player.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        local hrp = char.HumanoidRootPart
-        local hum = char:FindFirstChildOfClass("Humanoid")
-        
-        -- HIZ (1.8 Çarpanı)
-        if hyperActive and hum and hum.MoveDirection.Magnitude > 0 then
-            hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
+    if not char then return end
+    
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    
+    if not hrp or not hum then return end
+
+    -- HIZ SİSTEMİ
+    if hyperActive and hum.MoveDirection.Magnitude > 0 then
+        hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
+    end
+    
+    -- AKILLI ANTI-ATTACK
+    if antiAttackActive then
+        -- 1. Can Pompası (Milisaniyelik +10)
+        if hum.Health < 100 then
+            hum.Health = math.min(100, hum.Health + 10)
         end
         
-        -- İkinci Can Spamı
-        if antiAttackActive and hum and hum.Health < 100 then
-            hum.Health = 100
+        -- 2. Ölüm Modunu Kapat (Karakterin dağılmasın)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        
+        -- 3. Akıllı Buton Engelleme (Sadece yakınındakileri kontrol eder - FPS DÜŞÜRMEZ)
+        for _, obj in pairs(char:GetChildren()) do
+            if obj:IsA("ProximityPrompt") then obj.Enabled = false end
+            -- Katilin elindeki aletlerde butonu boz
+            if obj:IsA("Tool") and obj:FindFirstChildOfClass("ProximityPrompt") then
+                obj:FindFirstChildOfClass("ProximityPrompt").Enabled = false
+            end
         end
 
-        -- Anti-Void
+        -- 4. Anti-Void
         if hrp.Position.Y < -40 then
             hrp.Velocity = Vector3.new(0, 0, 0)
             hrp.CFrame = CFrame.new(hrp.Position.X, 20, hrp.Position.Z)
@@ -165,15 +160,13 @@ RunService.Heartbeat:Connect(function()
 end)
 
 --------------------------------------------------
--- TOGGLE & LOGO ANIMATION (SAF YEŞİL)
+-- TOGGLE & LOGO ANIMATION (KOYU YEŞİL)
 --------------------------------------------------
 btn.MouseButton1Click:Connect(function()
     menu.Visible = not menu.Visible
     if menu.Visible then
         TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 255, 0), Thickness = 4}):Play()
-        TweenService:Create(btn, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(0, 255, 0)}):Play()
     else
         TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 80, 0), Thickness = 2}):Play()
-        TweenService:Create(btn, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(0, 200, 0)}):Play()
     end
 end)
