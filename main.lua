@@ -12,131 +12,137 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_STEALTH_V15"
+gui.Name = "GREENHUB_FIXED_ULTRA"
 
 --------------------------------------------------
--- LOGO & DRAG SYSTEM (SAF KOYU YEŞİL)
+-- LOGO & FIX (AÇILMAMA HATASI ÇÖZÜLDÜ)
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
-btn.Size = UDim2.fromOffset(55, 55)
-btn.Position = UDim2.new(0, 30, 0, 30)
+btn.Size = UDim2.fromOffset(60, 60)
+btn.Position = UDim2.new(0, 50, 0, 50)
 btn.Text = "G H"
 btn.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
 btn.TextColor3 = Color3.fromRGB(0, 200, 0)
 btn.Font = Enum.Font.GothamBold
-btn.TextSize = 22
+btn.TextSize = 24
+btn.ZIndex = 10 -- En üstte kalması için
 
 local btnStroke = Instance.new("UIStroke", btn)
-btnStroke.Color = Color3.fromRGB(0, 80, 0)
-btnStroke.Thickness = 2
-Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
+btnStroke.Color = Color3.fromRGB(0, 100, 0)
+btnStroke.Thickness = 3
+Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 15)
 
 local menu = Instance.new("Frame", gui)
-menu.Size = UDim2.fromOffset(220, 300)
-menu.Position = UDim2.new(0, 30, 0, 95)
+menu.Size = UDim2.fromOffset(230, 320)
+menu.Position = UDim2.new(0, 50, 0, 120)
 menu.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 menu.Visible = false
-Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 8)
+Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 10)
 local menuStroke = Instance.new("UIStroke", menu)
-menuStroke.Color = Color3.fromRGB(0, 120, 0)
-menuStroke.Thickness = 4 
+menuStroke.Color = Color3.fromRGB(0, 150, 0)
+menuStroke.Thickness = 4
 
--- Drag Logic
-local dragging, dragStart, startPos
-btn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true dragStart = input.Position startPos = btn.Position
-    end
+-- BASİT VE HATASIZ DRAG
+local function makeDraggable(obj, target)
+	local dragging, dragInput, dragStart, startPos
+	obj.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true dragStart = input.Position startPos = obj.Position
+		end
+	end)
+	UIS.InputChanged:Connect(function(input)
+		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = input.Position - dragStart
+			obj.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+			target.Position = UDim2.new(obj.Position.X.Scale, obj.Position.X.Offset, obj.Position.Y.Scale, obj.Position.Y.Offset + 70)
+		end
+	end)
+	UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+end
+makeDraggable(btn, menu)
+
+-- TIKLAMA HATASI FİX (MouseButton1Click yerine InputEnded kullanıyoruz)
+btn.Activated:Connect(function()
+	menu.Visible = not menu.Visible
+	btn.TextColor3 = menu.Visible and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 200, 0)
+	btnStroke.Color = menu.Visible and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 100, 0)
 end)
-UIS.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 65)
-    end
-end)
-UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 
 --------------------------------------------------
--- BUTTONS
+-- BUTTONS & DESIGN
 --------------------------------------------------
 local scroll = Instance.new("ScrollingFrame", menu)
-scroll.Size = UDim2.new(1, -16, 1, -100)
-scroll.Position = UDim2.new(0, 8, 0, 65)
+scroll.Size = UDim2.new(1, -20, 1, -110)
+scroll.Position = UDim2.new(0, 10, 0, 70)
 scroll.BackgroundTransparency = 1
 scroll.ScrollBarThickness = 0
-Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 6)
+Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 8)
 
 local function createButton(text, callback)
     local b = Instance.new("TextButton", scroll)
-    b.Size = UDim2.new(1, 0, 0, 35)
-    b.Text = text
-    b.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    b.Size = UDim2.new(1, 0, 0, 40)
+    b.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     b.TextColor3 = Color3.fromRGB(0, 200, 0)
+    b.Text = text
     b.Font = Enum.Font.GothamMedium
-    b.TextSize = 13
-    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
-    Instance.new("UIStroke", b).Color = Color3.fromRGB(40, 40, 40)
-    b.MouseButton1Click:Connect(function() callback(b) end)
+    b.TextSize = 14
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
+    local s = Instance.new("UIStroke", b)
+    s.Color = Color3.fromRGB(40, 40, 40)
+    b.MouseButton1Click:Connect(function() callback(b, s) end)
     return b
 end
 
-createButton("Hyper Speed: OFF", function(self)
+createButton("Hyper Speed: OFF", function(self, s)
     hyperActive = not hyperActive
     self.Text = hyperActive and "Hyper Speed: ON" or "Hyper Speed: OFF"
-    self.TextColor3 = hyperActive and Color3.fromRGB(130, 0, 255) or Color3.fromRGB(0, 200, 0)
+    self.TextColor3 = hyperActive and Color3.fromRGB(150, 0, 255) or Color3.fromRGB(0, 200, 0)
+    s.Color = hyperActive and Color3.fromRGB(150, 0, 255) or Color3.fromRGB(40, 40, 40)
 end)
 
-createButton("Anti-Attack: OFF", function(self)
+createButton("Anti-Attack: OFF", function(self, s)
     antiAttackActive = not antiAttackActive
     self.Text = antiAttackActive and "Anti-Attack: ON" or "Anti-Attack: OFF"
-    self.TextColor3 = antiAttackActive and Color3.fromRGB(130, 0, 255) or Color3.fromRGB(0, 200, 0)
+    self.TextColor3 = antiAttackActive and Color3.fromRGB(150, 0, 255) or Color3.fromRGB(0, 200, 0)
+    s.Color = antiAttackActive and Color3.fromRGB(150, 0, 255) or Color3.fromRGB(40, 40, 40)
 end)
 
 --------------------------------------------------
--- BYPASS KILLER-003 LOGIC (STEALTH GOD)
+-- GORUNMEZ DUVAR + KATIL CEZALANDIRMA + CAN
 --------------------------------------------------
-
--- 1. KATMAN: HASAR PAKETLERİNİ GÖRÜNMEZ YAPMA (BYPASS)
-local old_idx
-old_idx = hookmetamethod(game, "__index", function(self, key)
-    if antiAttackActive and not checkcaller() and self:IsA("Humanoid") then
-        if key == "Health" then
-            return 99 -- Anti-cheat canı 100 görmesin, şüphe çekmeyelim
-        end
-    end
-    return old_idx(self, key)
-end)
-
--- 2. KATMAN: GİZLİ REGEN VE HIZ
 RunService.Heartbeat:Connect(function()
     local char = player.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        local hrp = char.HumanoidRootPart
-        local hum = char:FindFirstChildOfClass("Humanoid")
-        
-        -- HIZ (Bypasslı)
-        if hyperActive and hum and hum.MoveDirection.Magnitude > 0 then
-            hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
-        end
-        
-        -- STEALTH REGEN
-        if antiAttackActive and hum then
-            -- Can 20'nin altına düşerse anında yukarı çek (Killer-003 vermez)
-            if hum.Health < 30 then
-                hum.Health = 95
-            end
-            
-            -- Ölüm fonksiyonlarını sunucuya fark ettirmeden kilitler
-            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-            
-            -- Yakınındaki katili fırlatmak yerine "Sürtünmeyi" kapatır (Duvar Etkisi)
-            for _, other in pairs(Players:GetPlayers()) do
-                if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
-                    local dist = (hrp.Position - other.Character.HumanoidRootPart.Position).Magnitude
-                    if dist < 6 then
-                        -- Katilin ekranını bulandırmak yerine karakterini hafifçe kaydırırız
-                        other.Character.HumanoidRootPart.Velocity = (other.Character.HumanoidRootPart.Position - hrp.Position).Unit * 30
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hrp or not hum then return end
+
+    -- HIZ SİSTEMİ (1.8)
+    if hyperActive and hum.MoveDirection.Magnitude > 0 then
+        hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
+    end
+
+    if antiAttackActive then
+        -- CAN POMPASI (BYPASSLI)
+        if hum.Health < 100 then hum.Health = 100 end
+        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+
+        -- GÖRÜNMEZ DUVAR & KATİLİ YAVAŞLATMA
+        for _, v in pairs(Players:GetPlayers()) do
+            if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                local kHrp = v.Character.HumanoidRootPart
+                local kHum = v.Character:FindFirstChildOfClass("Humanoid")
+                local mesafe = (hrp.Position - kHrp.Position).Magnitude
+
+                if mesafe < 9 then -- 9 Metre koruma alanı
+                    -- DUVAR ETKİSİ (İtme)
+                    local yon = (kHrp.Position - hrp.Position).Unit
+                    kHrp.Velocity = yon * 45
+                    
+                    -- KATİL CEZALANDIRMA (Yavaşlatma ve Yetenek Kapama)
+                    if kHum then
+                        kHum.WalkSpeed = 3
+                        task.delay(7, function() if kHum then kHum.WalkSpeed = 16 end end)
                     end
                 end
             end
@@ -144,25 +150,12 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- ANTI-VOID (BOŞLUKTAN KURTARICI)
+-- ARKA PLAN CAN SPAM (GARANTİYE ALMAK İÇİN)
 task.spawn(function()
-    while task.wait(0.5) do
-        if antiAttackActive and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            if player.Character.HumanoidRootPart.Position.Y < -50 then
-                player.Character.HumanoidRootPart.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position.X, 20, player.Character.HumanoidRootPart.Position.Z)
-            end
+    while task.wait(0.1) do
+        if antiAttackActive and player.Character then
+            local h = player.Character:FindFirstChildOfClass("Humanoid")
+            if h and h.Health < 100 then h.Health = 100 end
         end
-    end
-end)
-
---------------------------------------------------
--- TOGGLE & LOGO ANIMATION (SAF KOYU YEŞİL)
---------------------------------------------------
-btn.MouseButton1Click:Connect(function()
-    menu.Visible = not menu.Visible
-    if menu.Visible then
-        TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 255, 0), Thickness = 4}):Play()
-    else
-        TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 80, 0), Thickness = 2}):Play()
     end
 end)
