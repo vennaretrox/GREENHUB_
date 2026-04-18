@@ -12,17 +12,17 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_ULTRA_GOD_V9"
+gui.Name = "GREENHUB_FORSAKEN_IMPERIAL"
 
 --------------------------------------------------
--- LOGO & DRAG SYSTEM (TAMAMEN SAF KOYU YEŞİL)
+-- LOGO & DRAG SYSTEM (TAM SAF YEŞİL)
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
 btn.Position = UDim2.new(0, 30, 0, 30)
 btn.Text = "G H"
 btn.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
-btn.TextColor3 = Color3.fromRGB(0, 200, 0) -- Saf Koyu Yeşil
+btn.TextColor3 = Color3.fromRGB(0, 200, 0)
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 22
 btn.AutoButtonColor = false
@@ -60,7 +60,7 @@ end)
 UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 
 --------------------------------------------------
--- TITLE & SUBTITLE (AYNI KALDI)
+-- TITLE & SUBTITLE
 --------------------------------------------------
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 35)
@@ -116,53 +116,50 @@ createButton("Anti-Attack: OFF", function(self)
 end)
 
 --------------------------------------------------
--- THE ULTIMATE GOD-MODE BYPASS (GOD TIER)
+-- MILLI-REGEN & GOD BYPASS
 --------------------------------------------------
-RunService.Stepped:Connect(function()
+RunService.PostSimulation:Connect(function() -- En son simülasyon aşamasında kontrol
     local char = player.Character
-    if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChildOfClass("Humanoid") then
-        local hrp = char.HumanoidRootPart
+    if char and char:FindFirstChildOfClass("Humanoid") then
         local hum = char:FindFirstChildOfClass("Humanoid")
+        local hrp = char:FindFirstChild("HumanoidRootPart")
         
-        -- HIZ (ASLA BOZULMAZ)
-        if hyperActive and hum.MoveDirection.Magnitude > 0 then
+        -- HIZ (AYNI)
+        if hyperActive and hrp and hum.MoveDirection.Magnitude > 0 then
             hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         end
         
-        -- ULTRA UPGRADE DEFENSE
+        -- ULTRA REGEN & GOD MODE
         if antiAttackActive then
-            -- 1. Canı sabitle (Milisaniyelik)
-            hum.Health = 100
-            
-            -- 2. "TouchInterest" temizliği (Saldırı objelerini sana çarpmadan siler)
-            for _, v in pairs(char:GetDescendants()) do
-                if v:IsA("TouchTransmitter") then
-                    v:Destroy() -- Hasar algısını kökten siler
-                end
+            -- Can Kilidi + Her Milisaniye +10 Can (Milli-Regen)
+            if hum.Health < hum.MaxHealth then
+                hum.Health = math.min(hum.MaxHealth, hum.Health + 10)
             end
             
-            -- 3. Fiziksel Vuruş Engeli
+            -- ÖLÜMÜN TÜM YOLLARINI KAPATIR
             hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
             
-            -- 4. Anti-Void (Düşme Koruması)
-            if hrp.Position.Y < -35 then
+            -- Uzaktan hasar gelmemesi için dokunma engelleyici (Force)
+            for _, v in pairs(char:GetDescendants()) do
+                if v:IsA("BasePart") then v.CanTouch = false end
+            end
+            
+            -- Anti-Void
+            if hrp and hrp.Position.Y < -40 then
                 hrp.Velocity = Vector3.new(0, 0, 0)
-                hrp.CFrame = CFrame.new(hrp.Position.X, 15, hrp.Position.Z)
+                hrp.CFrame = CFrame.new(hrp.Position.X, 25, hrp.Position.Z)
             end
         else
             hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+            for _, v in pairs(char:GetDescendants()) do
+                if v:IsA("BasePart") then v.CanTouch = true end
+            end
         end
     end
 end)
 
--- ÖLÜMÜ SUNUCUDAN SAKLAMA (INSTANT REBIRTH)
-player.CharacterAdded:Connect(function(c)
-    local h = c:WaitForChild("Humanoid")
-    h.BreakJointsOnDeath = false -- Parçalanma
-end)
-
 --------------------------------------------------
--- TOGGLE & LOGO ANIMATION (YEŞİL PARLAMA)
+-- TOGGLE & LOGO ANIMATION (SAF YEŞİL)
 --------------------------------------------------
 btn.MouseButton1Click:Connect(function()
     menu.Visible = not menu.Visible
