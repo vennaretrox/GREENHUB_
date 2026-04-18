@@ -6,12 +6,12 @@ local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
-local speedActive = false
-local speedValue = 2500 -- İSTEDİĞİN ÇILGIN HIZ
+local hyperActive = false
+local hyperMultiplier = 1.8 
 
--- GUI
+-- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_HYPER_FORSAKEN"
+gui.Name = "GREENHUB_FORSAKEN_V4"
 
 --------------------------------------------------
 -- LOGO & DRAG SYSTEM
@@ -20,10 +20,11 @@ local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
 btn.Position = UDim2.new(0, 30, 0, 30)
 btn.Text = "G H"
-btn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+btn.BackgroundColor3 = Color3.fromRGB(5, 5, 5) -- Koyu Siyah
 btn.TextColor3 = Color3.fromRGB(0, 255, 120)
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 22
+btn.AutoButtonColor = false
 
 local btnStroke = Instance.new("UIStroke", btn)
 btnStroke.Color = Color3.fromRGB(0, 120, 60)
@@ -31,20 +32,22 @@ btnStroke.Thickness = 2
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
 
 local menu = Instance.new("Frame", gui)
-menu.Size = UDim2.fromOffset(220, 280)
+menu.Size = UDim2.fromOffset(220, 260)
 menu.Position = UDim2.new(0, 30, 0, 95)
 menu.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 8)
-Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 120, 60)
 
--- DRAG LOGIC
+-- LED ÇERÇEVE (KALINLAŞTIRILDI)
+local menuStroke = Instance.new("UIStroke", menu)
+menuStroke.Color = Color3.fromRGB(0, 120, 60)
+menuStroke.Thickness = 3.5 -- Daha kalın LED efekti
+
+-- Drag Logic
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = btn.Position
+        dragging = true dragStart = input.Position startPos = btn.Position
     end
 end)
 UIS.InputChanged:Connect(function(input)
@@ -78,60 +81,63 @@ sub.Font = Enum.Font.GothamBlack
 sub.TextSize = 12
 
 --------------------------------------------------
--- FEATURES: ANTI-CHEAT BYPASS SPEED
+-- SCROLL & BUTTONS
 --------------------------------------------------
 local scroll = Instance.new("ScrollingFrame", menu)
-scroll.Size = UDim2.new(1, -16, 1, -75)
+scroll.Size = UDim2.new(1, -16, 1, -80)
 scroll.Position = UDim2.new(0, 8, 0, 65)
 scroll.BackgroundTransparency = 1
+scroll.ScrollBarThickness = 0
 Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 6)
 
 local function createButton(text, callback)
     local b = Instance.new("TextButton", scroll)
     b.Size = UDim2.new(1, 0, 0, 35)
     b.Text = text
-    b.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    b.TextColor3 = Color3.fromRGB(0, 200, 100)
+    b.BackgroundColor3 = Color3.fromRGB(15, 15, 15) -- Başlangıçta siyah
+    b.TextColor3 = Color3.fromRGB(0, 255, 120) -- Başlangıçta yeşil
     b.Font = Enum.Font.GothamMedium
     b.TextSize = 13
     Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
-    Instance.new("UIStroke", b).Color = Color3.fromRGB(35, 35, 35)
+    Instance.new("UIStroke", b).Color = Color3.fromRGB(40, 40, 40)
     b.MouseButton1Click:Connect(function() callback(b) end)
     return b
 end
 
-createButton("GOD SPEED: OFF", function(self)
-    speedActive = not speedActive
-    if speedActive then
-        self.Text = "GOD SPEED: ON"
-        self.TextColor3 = Color3.fromRGB(255, 255, 255)
+createButton("Hyper Speed: OFF", function(self)
+    hyperActive = not hyperActive
+    if hyperActive then
+        self.Text = "Hyper Speed: ON"
+        self.BackgroundColor3 = Color3.fromRGB(15, 15, 15) -- ARKA PLAN SİYAH KALIR
+        self.TextColor3 = Color3.fromRGB(130, 0, 255) -- YAZI KOYU MOR OLUR
     else
-        self.Text = "GOD SPEED: OFF"
-        self.TextColor3 = Color3.fromRGB(0, 200, 100)
+        self.Text = "Hyper Speed: OFF"
+        self.BackgroundColor3 = Color3.fromRGB(15, 15, 15) -- ARKA PLAN SİYAH KALIR
+        self.TextColor3 = Color3.fromRGB(0, 255, 120) -- YAZI YEŞİL OLUR
     end
 end)
 
--- ANTI-CHEAT BYPASS SPEED LOOP
+-- SAFE SPEED LOOP
 RunService.RenderStepped:Connect(function()
-    if speedActive and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local hum = player.Character.Humanoid
+    if hyperActive and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         local hrp = player.Character.HumanoidRootPart
-        
+        local hum = player.Character.Humanoid
         if hum.MoveDirection.Magnitude > 0 then
-            -- Karakteri baktığı yöne doğru ışınlayarak hız kazandırır (Anti-cheat bypass)
-            hrp.CFrame = hrp.CFrame + (hum.MoveDirection * (speedValue / 100))
+            hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         end
     end
 end)
 
 --------------------------------------------------
--- TOGGLE & ANIMATION
+-- TOGGLE & LOGO ANIMATION
 --------------------------------------------------
 btn.MouseButton1Click:Connect(function()
     menu.Visible = not menu.Visible
     if menu.Visible then
-        TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 255, 120), Thickness = 3}):Play()
+        TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 255, 120), Thickness = 3.5}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
     else
         TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 120, 60), Thickness = 2}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(0, 255, 120)}):Play()
     end
 end)
