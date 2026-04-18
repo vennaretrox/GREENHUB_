@@ -12,10 +12,10 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V21_LAG_BACK"
+gui.Name = "GREENHUB_V22_ANTIKILL"
 
 --------------------------------------------------
--- LOGO & SOFT TWEEN (0.6s PARILTI)
+-- LOGO & TWEEN (PARILTI)
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
@@ -33,7 +33,7 @@ btnStroke.Thickness = 2
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
 
 --------------------------------------------------
--- MENU & TITLES (GOTHAMBLACK FORSAKEN)
+-- MENU (GOTHAMBLACK FORSAKEN)
 --------------------------------------------------
 local menu = Instance.new("Frame", gui)
 menu.Size = UDim2.fromOffset(225, 310)
@@ -63,7 +63,7 @@ sub.TextColor3 = Color3.fromRGB(0, 100, 0)
 sub.Font = Enum.Font.GothamBlack
 sub.TextSize = 12
 
--- Logo Tween Logic
+-- Logo Tween
 btn.Activated:Connect(function()
     menu.Visible = not menu.Visible
     local targetColor = menu.Visible and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 150, 0)
@@ -88,7 +88,7 @@ end)
 UIS.InputEnded:Connect(function(input) dragging = false end)
 
 --------------------------------------------------
--- BUTTONS (OFF: YEŞİL / ON: KOYU MOR)
+-- BUTTONS (OFF: YEŞİL / ON: MOR)
 --------------------------------------------------
 local scroll = Instance.new("ScrollingFrame", menu)
 scroll.Size = UDim2.new(1, -20, 1, -100)
@@ -121,23 +121,36 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- LAG-BACK & GOD DEFENSE
+-- THE ULTIMATE ANTI-KILL SYSTEM
 --------------------------------------------------
 
--- E TUŞU: ULTIMATE DOOM (Sis + Yavaşlatma)
-UIS.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
-        for _, other in pairs(Players:GetPlayers()) do
-            if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
-                local tHrp = other.Character.HumanoidRootPart
-                local tHum = other.Character:FindFirstChildOfClass("Humanoid")
-                local dist = (player.Character.HumanoidRootPart.Position - tHrp.Position).Magnitude
-                
+-- E TUŞU: KATİLİ KİLİTLEME (FİZİKSEL ENGEL)
+UIS.InputBegan:Connect(function(input, gpe)
+    if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
+        for _, v in pairs(Players:GetPlayers()) do
+            if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                local dist = (player.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).Magnitude
                 if dist < 12 then
-                    local s = Instance.new("Smoke", tHrp); s.Color = Color3.fromRGB(0,0,0); s.Size = 30; s.Opacity = 1
-                    if tHum.WalkSpeed > 16 then tHum.WalkSpeed = 10 else tHum.WalkSpeed = 5 end
-                    for _, tool in pairs(other.Character:GetChildren()) do if tool:IsA("Tool") then tool.Enabled = false end end
-                    task.delay(7, function() s:Destroy(); if tHum then tHum.WalkSpeed = 16 end; for _, tool in pairs(other.Character:GetChildren()) do if tool:IsA("Tool") then tool.Enabled = true end end end)
+                    -- Katilin etrafına görünmez bariyer (Sadece senin tarafında ama onu itecek)
+                    local cage = Instance.new("Part", workspace)
+                    cage.Size = Vector3.new(15, 15, 15)
+                    cage.CFrame = v.Character.HumanoidRootPart.CFrame
+                    cage.Transparency = 0.8 -- Hafif görünür sis etkisi
+                    cage.Color = Color3.fromRGB(0,0,0)
+                    cage.CanCollide = true
+                    cage.Anchored = true
+                    
+                    -- Katilin elindeki tool'ları bozma (Enabled kontrolü)
+                    for _, t in pairs(v.Character:GetChildren()) do
+                        if t:IsA("Tool") then t.Enabled = false end
+                    end
+                    
+                    task.delay(7, function() 
+                        cage:Destroy() 
+                        if v.Character then
+                            for _, t in pairs(v.Character:GetChildren()) do if t:IsA("Tool") then t.Enabled = true end end
+                        end
+                    end)
                 end
             end
         end
@@ -157,33 +170,34 @@ RunService.Heartbeat:Connect(function()
     end
 
     if antiAttackActive then
-        -- GHOST MODE (İçinden Geçme)
-        for _, part in pairs(char:GetChildren()) do
-            if part:IsA("BasePart") then part.CanTouch = false end
+        -- 1. ANTI-KILL GHOST (Fiziksel Teması Reddetme)
+        for _, p in pairs(char:GetChildren()) do
+            if p:IsA("BasePart") then 
+                p.CanTouch = false 
+                p.CanQuery = false -- Raycast (Öldürme ışınları) seni bulamaz
+            end
         end
         hum.Health = 100
-        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
 
-        -- LAG-BACK SİSTEMİ (Katili Geri Işınlama)
-        for _, other in pairs(Players:GetPlayers()) do
-            if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
-                local oHrp = other.Character.HumanoidRootPart
-                local dist = (hrp.Position - oHrp.Position).Magnitude
+        -- 2. DİRENÇLİ YAVAŞLATMA (CFrame Pushback)
+        for _, v in pairs(Players:GetPlayers()) do
+            if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                local vHrp = v.Character.HumanoidRootPart
+                local dist = (hrp.Position - vHrp.Position).Magnitude
                 
-                -- Eğer katil 4 metreden fazla yaklaşırsa "Lag" yemiş gibi 15 metre geriye atılır
-                if dist < 4 then
-                    local backDir = (oHrp.Position - hrp.Position).Unit
-                    oHrp.CFrame = oHrp.CFrame + (backDir * 15) -- Işınlama (Lag etkisi)
-                elseif dist < 8 then
-                    -- 8 metredeyken hafif itme (Duvar hissi)
-                    oHrp.Velocity = (oHrp.Position - hrp.Position).Unit * 40
+                if dist < 5 then
+                    -- Katil dibine girdiğinde onu her karede 15 metre geriye it (Lag etkisi)
+                    vHrp.CFrame = vHrp.CFrame * CFrame.new(0, 0, 15)
+                elseif dist < 10 then
+                    -- Katil yaklaşırken hızını CFrame ile kır (Hız hilesini bozar)
+                    vHrp.CFrame = vHrp.CFrame * CFrame.new(0, 0, 0.5)
                 end
             end
         end
     end
 end)
 
--- CAN POMPASI (Milli-Regen)
+-- ARKADAN CAN POMPALAMA (REGEN SPAM)
 task.spawn(function()
     while task.wait() do
         if antiAttackActive and player.Character then
