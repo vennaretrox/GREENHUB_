@@ -12,10 +12,10 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V19_FINAL"
+gui.Name = "GREENHUB_V21_LAG_BACK"
 
 --------------------------------------------------
--- LOGO & SOFT TWEEN (YAVAŞ PARILTI)
+-- LOGO & SOFT TWEEN (0.6s PARILTI)
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
@@ -63,16 +63,12 @@ sub.TextColor3 = Color3.fromRGB(0, 100, 0)
 sub.Font = Enum.Font.GothamBlack
 sub.TextSize = 12
 
--- SOFT TWEEN ACTIVATE
+-- Logo Tween Logic
 btn.Activated:Connect(function()
     menu.Visible = not menu.Visible
-    if menu.Visible then
-        TweenService:Create(btn, TweenInfo.new(0.6), {TextColor3 = Color3.fromRGB(0, 255, 0)}):Play()
-        TweenService:Create(btnStroke, TweenInfo.new(0.6), {Color = Color3.fromRGB(0, 255, 0), Thickness = 3.5}):Play()
-    else
-        TweenService:Create(btn, TweenInfo.new(0.6), {TextColor3 = Color3.fromRGB(0, 150, 0)}):Play()
-        TweenService:Create(btnStroke, TweenInfo.new(0.6), {Color = Color3.fromRGB(0, 80, 0), Thickness = 2}):Play()
-    end
+    local targetColor = menu.Visible and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 150, 0)
+    TweenService:Create(btn, TweenInfo.new(0.6), {TextColor3 = targetColor}):Play()
+    TweenService:Create(btnStroke, TweenInfo.new(0.6), {Color = targetColor, Thickness = menu.Visible and 3.5 or 2}):Play()
 end)
 
 -- Drag
@@ -105,7 +101,7 @@ local function createButton(text, callback)
     local b = Instance.new("TextButton", scroll)
     b.Size = UDim2.new(1, 0, 0, 38)
     b.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-    b.TextColor3 = Color3.fromRGB(0, 200, 0) -- OFF: YEŞİL
+    b.TextColor3 = Color3.fromRGB(0, 200, 0)
     b.Text = text .. ": OFF"
     b.Font = Enum.Font.GothamMedium
     b.TextSize = 13
@@ -125,8 +121,29 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- THE GOD DEFENSE (GHOST SHIELD)
+-- LAG-BACK & GOD DEFENSE
 --------------------------------------------------
+
+-- E TUŞU: ULTIMATE DOOM (Sis + Yavaşlatma)
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
+        for _, other in pairs(Players:GetPlayers()) do
+            if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
+                local tHrp = other.Character.HumanoidRootPart
+                local tHum = other.Character:FindFirstChildOfClass("Humanoid")
+                local dist = (player.Character.HumanoidRootPart.Position - tHrp.Position).Magnitude
+                
+                if dist < 12 then
+                    local s = Instance.new("Smoke", tHrp); s.Color = Color3.fromRGB(0,0,0); s.Size = 30; s.Opacity = 1
+                    if tHum.WalkSpeed > 16 then tHum.WalkSpeed = 10 else tHum.WalkSpeed = 5 end
+                    for _, tool in pairs(other.Character:GetChildren()) do if tool:IsA("Tool") then tool.Enabled = false end end
+                    task.delay(7, function() s:Destroy(); if tHum then tHum.WalkSpeed = 16 end; for _, tool in pairs(other.Character:GetChildren()) do if tool:IsA("Tool") then tool.Enabled = true end end end)
+                end
+            end
+        end
+    end
+end)
+
 RunService.Heartbeat:Connect(function()
     local char = player.Character
     if not char then return end
@@ -134,49 +151,39 @@ RunService.Heartbeat:Connect(function()
     local hum = char:FindFirstChildOfClass("Humanoid")
     if not hrp or not hum then return end
 
-    -- HIZ
+    -- HIZ (1.8X)
     if hyperActive and hum.MoveDirection.Magnitude > 0 then
         hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
     end
 
     if antiAttackActive then
-        -- TRIPLE REGEN
+        -- GHOST MODE (İçinden Geçme)
+        for _, part in pairs(char:GetChildren()) do
+            if part:IsA("BasePart") then part.CanTouch = false end
+        end
         hum.Health = 100
         hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
 
-        -- KATİLE KARŞI HAYALET MODU (DOKUNULMAZLIK)
-        for _, part in pairs(char:GetChildren()) do
-            if part:IsA("BasePart") then
-                part.CanTouch = false -- Katilin "Öldür" scripti sana fiziksel olarak değemez
-            end
-        end
-
-        -- KATİLİ KÖR ETME VE İTME (LOCAL SIMULATION)
+        -- LAG-BACK SİSTEMİ (Katili Geri Işınlama)
         for _, other in pairs(Players:GetPlayers()) do
             if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
-                local tHrp = other.Character.HumanoidRootPart
-                local dist = (hrp.Position - tHrp.Position).Magnitude
+                local oHrp = other.Character.HumanoidRootPart
+                local dist = (hrp.Position - oHrp.Position).Magnitude
                 
-                if dist < 10 then
-                    -- Onu senden uzaklaştır
-                    tHrp.Velocity = (tHrp.Position - hrp.Position).Unit * 60
-                    
-                    -- KÖR ETME: Katilin etrafını siyah dumanla kapla (Sadece o mesafedeyken)
-                    if not tHrp:FindFirstChild("BlindSmoke") then
-                        local smoke = Instance.new("Smoke", tHrp)
-                        smoke.Name = "BlindSmoke"
-                        smoke.Color = Color3.fromRGB(0, 0, 0)
-                        smoke.Size = 25
-                        smoke.Opacity = 1
-                        task.delay(7, function() if smoke then smoke:Destroy() end end)
-                    end
+                -- Eğer katil 4 metreden fazla yaklaşırsa "Lag" yemiş gibi 15 metre geriye atılır
+                if dist < 4 then
+                    local backDir = (oHrp.Position - hrp.Position).Unit
+                    oHrp.CFrame = oHrp.CFrame + (backDir * 15) -- Işınlama (Lag etkisi)
+                elseif dist < 8 then
+                    -- 8 metredeyken hafif itme (Duvar hissi)
+                    oHrp.Velocity = (oHrp.Position - hrp.Position).Unit * 40
                 end
             end
         end
     end
 end)
 
--- ARKADAN CAN POMPASI (BYPASS)
+-- CAN POMPASI (Milli-Regen)
 task.spawn(function()
     while task.wait() do
         if antiAttackActive and player.Character then
