@@ -12,10 +12,10 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_FORSAKEN_GOD_FINAL"
+gui.Name = "GREENHUB_FORSAKEN_GOD_V11"
 
 --------------------------------------------------
--- LOGO & DRAG SYSTEM (SAF KOYU YEŞİL TEMA)
+-- LOGO & DRAG SYSTEM (SAF KOYU YEŞİL)
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
@@ -115,44 +115,47 @@ createButton("Anti-Attack: OFF", function(self)
 end)
 
 --------------------------------------------------
--- DOUBLE-COLLISION LOCK & DUAL REGEN
+-- DUAL-PATH REGEN & ULTRA UPGRADE
 --------------------------------------------------
 
--- Koruma Döngüsü 1: Fizik Öncesi (Stepped)
+-- 1. YOL (Stepped): Çift milisaniyelerde çalışır, Eklemleri korur
 RunService.Stepped:Connect(function()
-    local char = player.Character
-    if char and antiAttackActive then
-        local hum = char:FindFirstChildOfClass("Humanoid")
+    if antiAttackActive and player.Character then
+        local hum = player.Character:FindFirstChildOfClass("Humanoid")
         if hum then
-            -- Spam Koruma: Parçaları her milisaniye kapat
-            for _, p in pairs(char:GetChildren()) do
-                if p:IsA("BasePart") then p.CanTouch = false end
+            -- HASAR GELDİĞİ ANDA +10 CAN SPAM (YOL A)
+            if hum.Health < 100 then
+                hum.Health = math.min(100, hum.Health + 10)
             end
-            -- Hasar Filtresi: Canı her zaman doldur
-            if hum.Health < 100 then hum.Health = 100 end
+            hum.BreakJointsOnDeath = false
             hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        end
+        for _, p in pairs(player.Character:GetChildren()) do
+            if p:IsA("BasePart") then p.CanTouch = false end
         end
     end
 end)
 
--- Koruma Döngüsü 2: Fizik Sonrası (Heartbeat) - HIZ BURADA
+-- 2. YOL (Heartbeat): Tek milisaniyelerde çalışır, Hızı yönetir
 RunService.Heartbeat:Connect(function()
     local char = player.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
         local hrp = char.HumanoidRootPart
         local hum = char:FindFirstChildOfClass("Humanoid")
         
-        -- HIZ (ASLA DEĞİŞMEZ)
+        -- HIZ SİSTEMİ (1.8 Çarpanı)
         if hyperActive and hum and hum.MoveDirection.Magnitude > 0 then
             hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         end
         
-        -- Double Check: İkinci can doldurma spamı
+        -- HASAR GELDİĞİ ANDA +10 CAN SPAM (YOL B)
         if antiAttackActive and hum then
-            if hum.Health < 100 then hum.Health = 100 end
-            -- Anti-Void
-            if hrp.Position.Y < -35 then
-                hrp.Velocity = Vector3.new(0,0,0)
+            if hum.Health < 100 then
+                hum.Health = math.min(100, hum.Health + 10)
+            end
+            -- Anti-Void (Harita altına düşme)
+            if hrp.Position.Y < -40 then
+                hrp.Velocity = Vector3.new(0, 0, 0)
                 hrp.CFrame = CFrame.new(hrp.Position.X, 20, hrp.Position.Z)
             end
         end
@@ -160,7 +163,7 @@ RunService.Heartbeat:Connect(function()
 end)
 
 --------------------------------------------------
--- TOGGLE & LOGO ANIMATION (SAF YEŞİL)
+-- TOGGLE & LOGO ANIMATION (KOYU YEŞİL)
 --------------------------------------------------
 btn.MouseButton1Click:Connect(function()
     menu.Visible = not menu.Visible
@@ -168,7 +171,7 @@ btn.MouseButton1Click:Connect(function()
         TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 255, 0), Thickness = 4}):Play()
         TweenService:Create(btn, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(0, 255, 0)}):Play()
     else
-        TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 100, 0), Thickness = 2}):Play()
+        TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 80, 0), Thickness = 2}):Play()
         TweenService:Create(btn, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(0, 200, 0)}):Play()
     end
 end)
