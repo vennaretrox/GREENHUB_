@@ -117,7 +117,7 @@ createButton("Turbo Speed: OFF", function(self)
         self.Text = "Turbo Speed: ON"
         self.TextColor3 = Color3.fromRGB(255, 255, 255)
         if player.Character and player.Character:FindFirstChild("Humanoid") then
-            player.Character.Humanoid.WalkSpeed = 700
+            player.Character.Humanoid.WalkSpeed = 900
         end
     else
         boosting = false
@@ -140,7 +140,7 @@ RunService.RenderStepped:Connect(function()
         local hrp = player.Character.HumanoidRootPart
         local hum = player.Character.Humanoid
         if hum.MoveDirection.Magnitude > 0 then
-            hrp.Velocity = hrp.Velocity + (hum.MoveDirection * 1.5)
+            hrp.Velocity = hrp.Velocity + (hum.MoveDirection * 2)
         end
     end
 end)
