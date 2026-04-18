@@ -12,10 +12,10 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_IMMORTAL_V25"
+gui.Name = "GREENHUB_GOD_V26"
 
 --------------------------------------------------
--- LOGO & 0.6s PARILTI (EFSANE GEÇİŞ)
+-- LOGO & 0.6s SOFT PARILTI
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
@@ -63,7 +63,7 @@ sub.TextColor3 = Color3.fromRGB(0, 100, 0)
 sub.Font = Enum.Font.GothamBlack
 sub.TextSize = 12
 
--- Logo Tween
+-- Logo Tween Logic
 btn.Activated:Connect(function()
     menu.Visible = not menu.Visible
     local targetColor = menu.Visible and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 150, 0)
@@ -71,14 +71,14 @@ btn.Activated:Connect(function()
     TweenService:Create(btnStroke, TweenInfo.new(0.6), {Color = targetColor, Thickness = menu.Visible and 3.5 or 2}):Play()
 end)
 
--- Drag (Hatasız)
+-- Drag
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = input.Position startPos = btn.Position end end)
 UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then local delta = input.Position - dragStart btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 65) end end)
 UIS.InputEnded:Connect(function(input) dragging = false end)
 
 --------------------------------------------------
--- BUTONLAR (OFF: YEŞİL / ON: MOR)
+-- BUTTONS (OFF: YEŞİL / ON: MOR)
 --------------------------------------------------
 local scroll = Instance.new("ScrollingFrame", menu)
 scroll.Size = UDim2.new(1, -20, 1, -100)
@@ -110,42 +110,10 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- THE ABSOLUTE ANTI-KILL SYSTEM
+-- THE 7-LAYER SPHERE SHIELD & ULTRA LAG
 --------------------------------------------------
 
--- E TUŞU: KATİLİ "VOID"E ÇEK VE KÖR ET
-UIS.InputBegan:Connect(function(input, gpe)
-    if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
-        for _, v in pairs(Players:GetPlayers()) do
-            if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-                local vHrp = v.Character.HumanoidRootPart
-                if (player.Character.HumanoidRootPart.Position - vHrp.Position).Magnitude < 15 then
-                    -- 1. Fiziksel Körlük (Kafasına büyük siyah neon blok)
-                    local box = Instance.new("Part", v.Character)
-                    box.Name = "GreenHub_Blind"
-                    box.Size = Vector3.new(8, 8, 8)
-                    box.CFrame = vHrp.CFrame
-                    box.Color = Color3.fromRGB(0,0,0)
-                    box.Material = Enum.Material.Neon
-                    box.CanCollide = false
-                    local weld = Instance.new("Weld", box)
-                    weld.Part0 = box
-                    weld.Part1 = vHrp
-                    
-                    -- 2. Zorunlu Işınlama (7 Saniye Boyunca Geriye Atar)
-                    task.spawn(function()
-                        local start = tick()
-                        while tick() - start < 7 do
-                            if vHrp then vHrp.CFrame = vHrp.CFrame * CFrame.new(0, 0, 5) end
-                            task.wait()
-                        end
-                        box:Destroy()
-                    end)
-                end
-            end
-        end
-    end
-end)
+local rotationAngle = 0
 
 RunService.Heartbeat:Connect(function()
     local char = player.Character
@@ -154,55 +122,87 @@ RunService.Heartbeat:Connect(function()
     local hum = char:FindFirstChildOfClass("Humanoid")
     if not hrp or not hum then return end
 
-    -- HIZ (1.8X)
+    -- HIZ
     if hyperActive and hum.MoveDirection.Magnitude > 0 then
         hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
     end
 
     if antiAttackActive then
-        -- 1. ANIMASYON KORUMASI (KATİLİN SENİ TUTMASINI ENGELLER)
-        for _, track in pairs(hum:GetPlayingAnimationTracks()) do
-            if track.Animation.AnimationId:find("kill") or track.Animation.AnimationId:find("attack") then
-                track:Stop()
-            end
-        end
-        hum.PlatformStand = false 
-
-        -- 2. DOKUNULMAZLIK (SERVER BYPASS)
+        -- 1. KATMAN KORUMA: CAN & ANIMASYON KİLİDİ
+        hum.Health = 100
+        for _, track in pairs(hum:GetPlayingAnimationTracks()) do track:Stop() end
+        
+        -- GHOST MODE (CANTOUCH BYPASS)
         for _, p in pairs(char:GetChildren()) do
-            if p:IsA("BasePart") then 
-                p.CanTouch = false 
-                p.CanQuery = false
-            end
+            if p:IsA("BasePart") then p.CanTouch = false p.CanQuery = false end
         end
 
-        -- 3. LAG-BACK IŞINLAMA (KATİL SANA DEĞEMEZ BİLE)
+        -- 2. KATMAN: ULTRA LAG & ORBIT SİSTEMİ
+        rotationAngle = rotationAngle + 0.1
         for _, v in pairs(Players:GetPlayers()) do
             if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
                 local vHrp = v.Character.HumanoidRootPart
                 local dist = (hrp.Position - vHrp.Position).Magnitude
                 
-                if dist < 6 then
-                    -- Katil 6 metreye girerse 25 metre geriye ışınlanır (Lag değil, direkt teleport)
-                    vHrp.CFrame = vHrp.CFrame * CFrame.new(0, 0, 25)
-                elseif dist < 12 then
-                    -- Yaklaşmaya çalıştıkça her saniye geriye itilir
-                    vHrp.CFrame = vHrp.CFrame * CFrame.new(0, 0, 2)
+                -- 7 KATMANLI KONTROL
+                if dist < 12 then
+                    -- KATİLİ ETRAFINDA DÖNDÜR (ORBIT)
+                    if dist < 6 then
+                        local offset = Vector3.new(math.cos(rotationAngle) * 8, 2, math.sin(rotationAngle) * 8)
+                        vHrp.CFrame = CFrame.new(hrp.Position + offset, hrp.Position)
+                    end
+                    
+                    -- ULTRA LAG-BACK (IŞINLAMA)
+                    if dist < 4 then
+                        -- En iç katman: 30 metre uzağa fırlat
+                        vHrp.CFrame = vHrp.CFrame * CFrame.new(0, 0, 30)
+                    elseif dist < 10 then
+                        -- Dış katmanlar: Sürekli titret ve geri it (Lag efekti)
+                        vHrp.CFrame = vHrp.CFrame * CFrame.new(math.random(-2,2), 0, 2.5)
+                    end
                 end
             end
         end
     end
 end)
 
--- ARKADAN MİLLİ-REGEN (ÖLÜMSÜZLÜK)
+-- E TUŞU: KATİLİ "LAG VOID"E SOK
+UIS.InputBegan:Connect(function(input, gpe)
+    if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
+        for _, v in pairs(Players:GetPlayers()) do
+            if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                local vHrp = v.Character.HumanoidRootPart
+                if (player.Character.HumanoidRootPart.Position - vHrp.Position).Magnitude < 15 then
+                    -- Katilin ekranını kör eden Weld-Box
+                    local b = Instance.new("Part", v.Character)
+                    b.Size = Vector3.new(10, 10, 10)
+                    b.Color = Color3.fromRGB(0,0,0)
+                    b.Material = Enum.Material.Neon
+                    b.CanCollide = false
+                    local w = Instance.new("Weld", b)
+                    w.Part0 = b w.Part1 = vHrp
+                    
+                    task.spawn(function()
+                        for i = 1, 150 do -- 7 Saniye boyunca her karede farklı yere ışınla (Deli Lag)
+                            if vHrp then
+                                vHrp.CFrame = vHrp.CFrame * CFrame.new(0, 0, 5) * CFrame.Angles(0, math.rad(45), 0)
+                            end
+                            task.wait()
+                        end
+                        b:Destroy()
+                    end)
+                end
+            end
+        end
+    end
+end)
+
+-- MİLLİ-REGEN (ÖLÜMSÜZLÜK)
 task.spawn(function()
     while task.wait() do
         if antiAttackActive and player.Character then
             local h = player.Character:FindFirstChildOfClass("Humanoid")
-            if h then 
-                h.Health = 100 
-                if h.Health <= 0 then h.Health = 100 end -- Ölmeyi reddet
-            end
+            if h then h.Health = 100 end
         end
     end
 end)
