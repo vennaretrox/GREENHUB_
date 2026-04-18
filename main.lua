@@ -6,12 +6,12 @@ local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
-local boosting = false
 local speedActive = false
+local speedValue = 2500 -- İSTEDİĞİN ÇILGIN HIZ
 
 -- GUI
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_ULTIMATE"
+gui.Name = "GREENHUB_HYPER_FORSAKEN"
 
 --------------------------------------------------
 -- LOGO & DRAG SYSTEM
@@ -24,7 +24,6 @@ btn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 btn.TextColor3 = Color3.fromRGB(0, 255, 120)
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 22
-btn.AutoButtonColor = false
 
 local btnStroke = Instance.new("UIStroke", btn)
 btnStroke.Color = Color3.fromRGB(0, 120, 60)
@@ -39,7 +38,7 @@ menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 8)
 Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 120, 60)
 
--- SÜRÜKLEME SİSTEMİ
+-- DRAG LOGIC
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -56,12 +55,10 @@ UIS.InputChanged:Connect(function(input)
         menu.Position = UDim2.new(nPos.X.Scale, nPos.X.Offset, nPos.Y.Scale, nPos.Y.Offset + 65)
     end
 end)
-UIS.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
-end)
+UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 
 --------------------------------------------------
--- TITLE & SUBTITLE (GOTHAM BLACK)
+-- TITLE & SUBTITLE
 --------------------------------------------------
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 35)
@@ -77,17 +74,16 @@ sub.Position = UDim2.new(0, 0, 0, 30)
 sub.BackgroundTransparency = 1
 sub.Text = "forsaken"
 sub.TextColor3 = Color3.fromRGB(0, 120, 60)
-sub.Font = Enum.Font.GothamBlack -- GOTHAM BLACK YAPILDI
+sub.Font = Enum.Font.GothamBlack
 sub.TextSize = 12
 
 --------------------------------------------------
--- SCROLL & BUTTONS
+-- FEATURES: ANTI-CHEAT BYPASS SPEED
 --------------------------------------------------
 local scroll = Instance.new("ScrollingFrame", menu)
 scroll.Size = UDim2.new(1, -16, 1, -75)
 scroll.Position = UDim2.new(0, 8, 0, 65)
 scroll.BackgroundTransparency = 1
-scroll.ScrollBarThickness = 2
 Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 6)
 
 local function createButton(text, callback)
@@ -100,46 +96,30 @@ local function createButton(text, callback)
     b.TextSize = 13
     Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
     Instance.new("UIStroke", b).Color = Color3.fromRGB(35, 35, 35)
-    
-    b.MouseButton1Click:Connect(function()
-        callback(b)
-    end)
+    b.MouseButton1Click:Connect(function() callback(b) end)
     return b
 end
 
---------------------------------------------------
--- HYPER SPEED SYSTEM (FORCE 1000)
---------------------------------------------------
-createButton("Hyper Speed: OFF", function(self)
+createButton("GOD SPEED: OFF", function(self)
     speedActive = not speedActive
     if speedActive then
-        boosting = true
-        self.Text = "Hyper Speed: ON"
+        self.Text = "GOD SPEED: ON"
         self.TextColor3 = Color3.fromRGB(255, 255, 255)
     else
-        boosting = false
-        self.Text = "Hyper Speed: OFF"
+        self.Text = "GOD SPEED: OFF"
         self.TextColor3 = Color3.fromRGB(0, 200, 100)
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            player.Character.Humanoid.WalkSpeed = 16
-        end
     end
 end)
 
--- Hız Sabitleyici Döngü (Hızın düşmesini engeller)
-RunService.Stepped:Connect(function()
-    if speedActive and player.Character and player.Character:FindFirstChild("Humanoid") then
-        player.Character.Humanoid.WalkSpeed = 1000 -- HIZ 1000 YAPILDI
-    end
-end)
-
--- Boost (İtme) Döngüsü
+-- ANTI-CHEAT BYPASS SPEED LOOP
 RunService.RenderStepped:Connect(function()
-    if boosting and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = player.Character.HumanoidRootPart
+    if speedActive and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         local hum = player.Character.Humanoid
+        local hrp = player.Character.HumanoidRootPart
+        
         if hum.MoveDirection.Magnitude > 0 then
-            hrp.Velocity = hrp.Velocity + (hum.MoveDirection * 2.5)
+            -- Karakteri baktığı yöne doğru ışınlayarak hız kazandırır (Anti-cheat bypass)
+            hrp.CFrame = hrp.CFrame + (hum.MoveDirection * (speedValue / 100))
         end
     end
 end)
