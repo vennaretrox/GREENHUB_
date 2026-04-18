@@ -12,18 +12,18 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V17_REFINED"
+gui.Name = "GREENHUB_V18_GODMODE"
 
 --------------------------------------------------
--- LOGO (İNCE G H VE IŞIKLI SİSTEM)
+-- LOGO & SOFT TWEEN ANIMATION
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
 btn.Position = UDim2.new(0, 50, 0, 50)
 btn.Text = "G H"
 btn.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
-btn.TextColor3 = Color3.fromRGB(0, 180, 0) -- Normal Yeşil
-btn.Font = Enum.Font.Gotham -- Daha ince durması için
+btn.TextColor3 = Color3.fromRGB(0, 150, 0) -- Başlangıç Koyu Yeşil
+btn.Font = Enum.Font.Gotham -- Orta İncelik
 btn.TextSize = 20
 btn.ZIndex = 10
 
@@ -33,12 +33,12 @@ btnStroke.Thickness = 2
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
 
 --------------------------------------------------
--- MENU & TITLES
+-- MENU & TITLES (GOTHAMBLACK FORSAKEN)
 --------------------------------------------------
 local menu = Instance.new("Frame", gui)
 menu.Size = UDim2.fromOffset(225, 310)
 menu.Position = UDim2.new(0, 50, 0, 115)
-menu.BackgroundColor3 = Color3.fromRGB(5, 5, 5) -- Saf Siyah
+menu.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
 menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 8)
 local menuStroke = Instance.new("UIStroke", menu)
@@ -63,23 +63,19 @@ sub.TextColor3 = Color3.fromRGB(0, 100, 0)
 sub.Font = Enum.Font.GothamBlack
 sub.TextSize = 12
 
--- TIKLAMA VE IŞIK EFEKTİ
+-- YAVAŞ PARILTI ANIMASYONU
 btn.Activated:Connect(function()
     menu.Visible = not menu.Visible
     if menu.Visible then
-        -- Menü açılınca parlak ışık
-        btn.TextColor3 = Color3.fromRGB(0, 255, 0)
-        btnStroke.Color = Color3.fromRGB(0, 255, 0)
-        btnStroke.Thickness = 3
+        TweenService:Create(btn, TweenInfo.new(0.5), {TextColor3 = Color3.fromRGB(0, 255, 0)}):Play()
+        TweenService:Create(btnStroke, TweenInfo.new(0.5), {Color = Color3.fromRGB(0, 255, 0), Thickness = 3}):Play()
     else
-        -- Menü kapanınca normal
-        btn.TextColor3 = Color3.fromRGB(0, 180, 0)
-        btnStroke.Color = Color3.fromRGB(0, 80, 0)
-        btnStroke.Thickness = 2
+        TweenService:Create(btn, TweenInfo.new(0.5), {TextColor3 = Color3.fromRGB(0, 150, 0)}):Play()
+        TweenService:Create(btnStroke, TweenInfo.new(0.5), {Color = Color3.fromRGB(0, 80, 0), Thickness = 2}):Play()
     end
 end)
 
--- Sürükleme
+-- Drag Logic
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -96,7 +92,7 @@ end)
 UIS.InputEnded:Connect(function(input) dragging = false end)
 
 --------------------------------------------------
--- BUTTONS (KOYU MOR & YEŞİL SİSTEMİ)
+-- BUTTONS (OFF: YEŞİL / ON: MOR)
 --------------------------------------------------
 local scroll = Instance.new("ScrollingFrame", menu)
 scroll.Size = UDim2.new(1, -20, 1, -100)
@@ -108,23 +104,21 @@ Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 8)
 local function createButton(text, callback)
     local b = Instance.new("TextButton", scroll)
     b.Size = UDim2.new(1, 0, 0, 38)
-    b.BackgroundColor3 = Color3.fromRGB(10, 10, 10) -- Buton Arkaplan Siyah
-    b.TextColor3 = Color3.fromRGB(0, 200, 0) -- Başlangıç Yeşil (OFF)
+    b.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+    b.TextColor3 = Color3.fromRGB(0, 200, 0) -- OFF Rengi
     b.Text = text .. ": OFF"
     b.Font = Enum.Font.GothamMedium
     b.TextSize = 13
     Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
-    local s = Instance.new("UIStroke", b)
-    s.Color = Color3.fromRGB(30, 30, 30)
     
     local active = false
     b.MouseButton1Click:Connect(function()
         active = not active
         if active then
-            b.TextColor3 = Color3.fromRGB(100, 0, 180) -- Koyu Mor
+            b.TextColor3 = Color3.fromRGB(120, 0, 200) -- Koyu Mor ON
             b.Text = text .. ": ON"
         else
-            b.TextColor3 = Color3.fromRGB(0, 200, 0) -- Yeşil
+            b.TextColor3 = Color3.fromRGB(0, 200, 0) -- Yeşil OFF
             b.Text = text .. ": OFF"
         end
         callback(active)
@@ -136,7 +130,7 @@ createButton("Hyper Speed", function(state) hyperActive = state end)
 createButton("Anti-Attack", function(state) antiAttackActive = state end)
 
 --------------------------------------------------
--- THE CORE: ANTI-ATTACK & SPEED
+-- CORE PROTECTION & ATTACKER BLIND
 --------------------------------------------------
 RunService.Heartbeat:Connect(function()
     local char = player.Character
@@ -150,24 +144,33 @@ RunService.Heartbeat:Connect(function()
         hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
     end
 
-    -- ANTI-ATTACK SİSTEMİ (UPGRADED)
     if antiAttackActive then
-        -- 1. Can Pompası
         hum.Health = 100
         hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
 
-        -- 2. Görünmez Duvar & Katil Cezası
         for _, other in pairs(Players:GetPlayers()) do
             if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
-                local targetHrp = other.Character.HumanoidRootPart
-                local dist = (hrp.Position - targetHrp.Position).Magnitude
+                local tHrp = other.Character.HumanoidRootPart
+                local tHum = other.Character:FindFirstChildOfClass("Humanoid")
+                local dist = (hrp.Position - tHrp.Position).Magnitude
                 
-                if dist < 9 then -- 9 Metre Kalkan
-                    targetHrp.Velocity = (targetHrp.Position - hrp.Position).Unit * 55
-                    local targetHum = other.Character:FindFirstChildOfClass("Humanoid")
-                    if targetHum then
-                        targetHum.WalkSpeed = 3 -- Yavaşlat
-                        task.delay(7, function() if targetHum then targetHum.WalkSpeed = 16 end end)
+                if dist < 10 then
+                    -- 1. Görünmez Duvar (İtme)
+                    tHrp.Velocity = (tHrp.Position - hrp.Position).Unit * 50
+                    
+                    -- 2. Kör Etme & Özellik Kısıtlama (Hafif ve Bypasslı)
+                    if tHum then
+                        tHum.WalkSpeed = 3
+                        -- Katilin aletlerini "körlük" için geçici olarak deaktif etme
+                        for _, tool in pairs(other.Character:GetChildren()) do
+                            if tool:IsA("Tool") then tool.Enabled = false end
+                        end
+                        task.delay(7, function() 
+                            if tHum then tHum.WalkSpeed = 16 end 
+                            for _, tool in pairs(other.Character:GetChildren()) do
+                                if tool:IsA("Tool") then tool.Enabled = true end
+                            end
+                        end)
                     end
                 end
             end
@@ -175,7 +178,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- ARKADAN CAN POMPASI (MİLLİ-REGEN SPAM)
+-- ARKADAN CAN POMPASI (MİLLİ-REGEN)
 task.spawn(function()
     while task.wait() do
         if antiAttackActive and player.Character then
