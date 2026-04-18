@@ -12,7 +12,7 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_GUARDIAN_ULTRA"
+gui.Name = "GREENHUB_STEALTH_V15"
 
 --------------------------------------------------
 -- LOGO & DRAG SYSTEM (SAF KOYU YEŞİL)
@@ -58,27 +58,7 @@ end)
 UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 
 --------------------------------------------------
--- TITLE & SUBTITLE
---------------------------------------------------
-local title = Instance.new("TextLabel", menu)
-title.Size = UDim2.new(1, 0, 0, 35)
-title.BackgroundTransparency = 1
-title.Text = "GREENHUB"
-title.TextColor3 = Color3.fromRGB(0, 255, 0)
-title.Font = Enum.Font.GothamBold
-title.TextSize = 18
-
-local sub = Instance.new("TextLabel", menu)
-sub.Size = UDim2.new(1, 0, 0, 15)
-sub.Position = UDim2.new(0, 0, 0, 30)
-sub.BackgroundTransparency = 1
-sub.Text = "guardian"
-sub.TextColor3 = Color3.fromRGB(0, 100, 0)
-sub.Font = Enum.Font.GothamBlack
-sub.TextSize = 12
-
---------------------------------------------------
--- SCROLL & BUTTONS
+-- BUTTONS
 --------------------------------------------------
 local scroll = Instance.new("ScrollingFrame", menu)
 scroll.Size = UDim2.new(1, -16, 1, -100)
@@ -114,73 +94,69 @@ createButton("Anti-Attack: OFF", function(self)
 end)
 
 --------------------------------------------------
--- GUARDIAN SYSTEM (AURA & PUNISH)
+-- BYPASS KILLER-003 LOGIC (STEALTH GOD)
 --------------------------------------------------
 
--- Katili Cezalandırma Fonksiyonu
-local function punishKiller(killer)
-    local hum = killer:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.WalkSpeed = 4 -- Fena yavaşlat
-        -- Yetenekleri kapatma simülasyonu (Aletleri siler veya deaktive eder)
-        for _, tool in pairs(killer:GetChildren()) do
-            if tool:IsA("Tool") then tool.Parent = nil end
+-- 1. KATMAN: HASAR PAKETLERİNİ GÖRÜNMEZ YAPMA (BYPASS)
+local old_idx
+old_idx = hookmetamethod(game, "__index", function(self, key)
+    if antiAttackActive and not checkcaller() and self:IsA("Humanoid") then
+        if key == "Health" then
+            return 99 -- Anti-cheat canı 100 görmesin, şüphe çekmeyelim
         end
-        
-        -- 7 Saniye sonra geri getirme (isteğe bağlı)
-        task.delay(7, function()
-            if hum then hum.WalkSpeed = 16 end
-        end)
     end
-end
+    return old_idx(self, key)
+end)
 
+-- 2. KATMAN: GİZLİ REGEN VE HIZ
 RunService.Heartbeat:Connect(function()
     local char = player.Character
-    if not char or not antiAttackActive then return end
-    
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    
-    if hrp and hum then
-        -- 1. TRIPLE REGEN (3 Koldan Can)
-        hum.Health = 100
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local hrp = char.HumanoidRootPart
+        local hum = char:FindFirstChildOfClass("Humanoid")
         
-        -- 2. GÖRÜNMEZ DUVAR VE CEZALANDIRMA MANTIĞI
-        for _, otherPlayer in pairs(Players:GetPlayers()) do
-            if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                local targetHrp = otherPlayer.Character.HumanoidRootPart
-                local dist = (hrp.Position - targetHrp.Position).Magnitude
-                
-                if dist < 8 then -- Eğer katil 8 metreden fazla yaklaşırsa
-                    -- Geri itme (Görünmez duvar etkisi)
-                    local pushDir = (targetHrp.Position - hrp.Position).Unit
-                    targetHrp.Velocity = pushDir * 50
-                    
-                    -- Cezalandır
-                    punishKiller(otherPlayer.Character)
+        -- HIZ (Bypasslı)
+        if hyperActive and hum and hum.MoveDirection.Magnitude > 0 then
+            hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
+        end
+        
+        -- STEALTH REGEN
+        if antiAttackActive and hum then
+            -- Can 20'nin altına düşerse anında yukarı çek (Killer-003 vermez)
+            if hum.Health < 30 then
+                hum.Health = 95
+            end
+            
+            -- Ölüm fonksiyonlarını sunucuya fark ettirmeden kilitler
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+            
+            -- Yakınındaki katili fırlatmak yerine "Sürtünmeyi" kapatır (Duvar Etkisi)
+            for _, other in pairs(Players:GetPlayers()) do
+                if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
+                    local dist = (hrp.Position - other.Character.HumanoidRootPart.Position).Magnitude
+                    if dist < 6 then
+                        -- Katilin ekranını bulandırmak yerine karakterini hafifçe kaydırırız
+                        other.Character.HumanoidRootPart.Velocity = (other.Character.HumanoidRootPart.Position - hrp.Position).Unit * 30
+                    end
                 end
             end
         end
-
-        -- 3. HIZ SİSTEMİ
-        if hyperActive and hum.MoveDirection.Magnitude > 0 then
-            hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
-        end
     end
 end)
 
--- EKSTRA CAN POMPASI (TASK SPAWN)
+-- ANTI-VOID (BOŞLUKTAN KURTARICI)
 task.spawn(function()
-    while task.wait() do
-        if antiAttackActive and player.Character then
-            local h = player.Character:FindFirstChildOfClass("Humanoid")
-            if h then h.Health = 100 end
+    while task.wait(0.5) do
+        if antiAttackActive and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            if player.Character.HumanoidRootPart.Position.Y < -50 then
+                player.Character.HumanoidRootPart.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position.X, 20, player.Character.HumanoidRootPart.Position.Z)
+            end
         end
     end
 end)
 
 --------------------------------------------------
--- TOGGLE & LOGO ANIMATION (KOYU YEŞİL)
+-- TOGGLE & LOGO ANIMATION (SAF KOYU YEŞİL)
 --------------------------------------------------
 btn.MouseButton1Click:Connect(function()
     menu.Visible = not menu.Visible
