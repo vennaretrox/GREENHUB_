@@ -11,7 +11,7 @@ local speedActive = false
 
 -- GUI
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_FINAL_FIX"
+gui.Name = "GREENHUB_ULTIMATE"
 
 --------------------------------------------------
 -- LOGO & DRAG SYSTEM
@@ -32,14 +32,14 @@ btnStroke.Thickness = 2
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
 
 local menu = Instance.new("Frame", gui)
-menu.Size = UDim2.fromOffset(220, 280) -- Boyut biraz büyütüldü başlıklar için
+menu.Size = UDim2.fromOffset(220, 280)
 menu.Position = UDim2.new(0, 30, 0, 95)
 menu.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 8)
 Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 120, 60)
 
--- DRAG LOGIC
+-- SÜRÜKLEME SİSTEMİ
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -61,7 +61,7 @@ UIS.InputEnded:Connect(function(input)
 end)
 
 --------------------------------------------------
--- TITLE & SUBTITLE (EKLEDİM!)
+-- TITLE & SUBTITLE (GOTHAM BLACK)
 --------------------------------------------------
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 35)
@@ -77,15 +77,15 @@ sub.Position = UDim2.new(0, 0, 0, 30)
 sub.BackgroundTransparency = 1
 sub.Text = "forsaken"
 sub.TextColor3 = Color3.fromRGB(0, 120, 60)
-sub.Font = Enum.Font.GothamMedium
-sub.TextSize = 11
+sub.Font = Enum.Font.GothamBlack -- GOTHAM BLACK YAPILDI
+sub.TextSize = 12
 
 --------------------------------------------------
--- SCROLL & BUTTON CREATOR
+-- SCROLL & BUTTONS
 --------------------------------------------------
 local scroll = Instance.new("ScrollingFrame", menu)
-scroll.Size = UDim2.new(1, -16, 1, -70)
-scroll.Position = UDim2.new(0, 8, 0, 60)
+scroll.Size = UDim2.new(1, -16, 1, -75)
+scroll.Position = UDim2.new(0, 8, 0, 65)
 scroll.BackgroundTransparency = 1
 scroll.ScrollBarThickness = 2
 Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 6)
@@ -96,32 +96,29 @@ local function createButton(text, callback)
     b.Text = text
     b.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     b.TextColor3 = Color3.fromRGB(0, 200, 100)
-    b.Font = Enum.Font.Gotham
+    b.Font = Enum.Font.GothamMedium
     b.TextSize = 13
     Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
     Instance.new("UIStroke", b).Color = Color3.fromRGB(35, 35, 35)
     
     b.MouseButton1Click:Connect(function()
-        callback(b) -- Butonun kendisini callback'e gönderiyoruz
+        callback(b)
     end)
     return b
 end
 
 --------------------------------------------------
--- FEATURES (FIXED!)
+-- HYPER SPEED SYSTEM (FORCE 1000)
 --------------------------------------------------
-createButton("Turbo Speed: OFF", function(self)
+createButton("Hyper Speed: OFF", function(self)
     speedActive = not speedActive
     if speedActive then
         boosting = true
-        self.Text = "Turbo Speed: ON"
+        self.Text = "Hyper Speed: ON"
         self.TextColor3 = Color3.fromRGB(255, 255, 255)
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            player.Character.Humanoid.WalkSpeed = 900
-        end
     else
         boosting = false
-        self.Text = "Turbo Speed: OFF"
+        self.Text = "Hyper Speed: OFF"
         self.TextColor3 = Color3.fromRGB(0, 200, 100)
         if player.Character and player.Character:FindFirstChild("Humanoid") then
             player.Character.Humanoid.WalkSpeed = 16
@@ -129,18 +126,20 @@ createButton("Turbo Speed: OFF", function(self)
     end
 end)
 
-createButton("Toggle Chat", function()
-    local chatGui = player.PlayerGui:FindFirstChild("Chat")
-    if chatGui then chatGui.Enabled = not chatGui.Enabled end
+-- Hız Sabitleyici Döngü (Hızın düşmesini engeller)
+RunService.Stepped:Connect(function()
+    if speedActive and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.WalkSpeed = 1000 -- HIZ 1000 YAPILDI
+    end
 end)
 
--- Boost Loop
+-- Boost (İtme) Döngüsü
 RunService.RenderStepped:Connect(function()
     if boosting and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         local hrp = player.Character.HumanoidRootPart
         local hum = player.Character.Humanoid
         if hum.MoveDirection.Magnitude > 0 then
-            hrp.Velocity = hrp.Velocity + (hum.MoveDirection * 2)
+            hrp.Velocity = hrp.Velocity + (hum.MoveDirection * 2.5)
         end
     end
 end)
