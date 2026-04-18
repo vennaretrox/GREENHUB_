@@ -12,17 +12,17 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_ULTRA_FORSAKEN_GOD"
+gui.Name = "GREENHUB_ULTRA_GOD_V9"
 
 --------------------------------------------------
--- LOGO & DRAG SYSTEM (SAF KOYU YEŞİL)
+-- LOGO & DRAG SYSTEM (TAMAMEN SAF KOYU YEŞİL)
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
 btn.Position = UDim2.new(0, 30, 0, 30)
 btn.Text = "G H"
 btn.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
-btn.TextColor3 = Color3.fromRGB(0, 200, 0)
+btn.TextColor3 = Color3.fromRGB(0, 200, 0) -- Saf Koyu Yeşil
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 22
 btn.AutoButtonColor = false
@@ -116,7 +116,7 @@ createButton("Anti-Attack: OFF", function(self)
 end)
 
 --------------------------------------------------
--- ULTRA UPGRADE CORE (NO-DEATH BYPASS)
+-- THE ULTIMATE GOD-MODE BYPASS (GOD TIER)
 --------------------------------------------------
 RunService.Stepped:Connect(function()
     local char = player.Character
@@ -124,43 +124,45 @@ RunService.Stepped:Connect(function()
         local hrp = char.HumanoidRootPart
         local hum = char:FindFirstChildOfClass("Humanoid")
         
-        -- HIZ (DOKUNULMADI)
+        -- HIZ (ASLA BOZULMAZ)
         if hyperActive and hum.MoveDirection.Magnitude > 0 then
             hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         end
         
-        -- ULTRA KORUMA
+        -- ULTRA UPGRADE DEFENSE
         if antiAttackActive then
-            -- Canı milisaniyelik 100'e kilitler (Sunucu paketini beklemez)
-            if hum.Health < 100 then hum.Health = 100 end
+            -- 1. Canı sabitle (Milisaniyelik)
+            hum.Health = 100
             
-            -- ÖLÜMÜN TÜM YOLLARINI KAPATIR
-            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-            hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false) -- Darbe etkisini azaltır
-            
-            -- Anti-Void Upgrade
-            if hrp.Position.Y < -30 then
-                hrp.Velocity = Vector3.new(0, 0, 0)
-                hrp.CFrame = CFrame.new(hrp.Position.X, 20, hrp.Position.Z)
+            -- 2. "TouchInterest" temizliği (Saldırı objelerini sana çarpmadan siler)
+            for _, v in pairs(char:GetDescendants()) do
+                if v:IsA("TouchTransmitter") then
+                    v:Destroy() -- Hasar algısını kökten siler
+                end
             end
             
-            -- Katilin Karakterini ve Objeleri "Dokunulmaz" Yapar (Gelişmiş)
-            for _, v in pairs(char:GetChildren()) do
-                if v:IsA("BasePart") then
-                    v.CanTouch = false -- Senin parçaların hasar algılamasın
-                end
+            -- 3. Fiziksel Vuruş Engeli
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+            
+            -- 4. Anti-Void (Düşme Koruması)
+            if hrp.Position.Y < -35 then
+                hrp.Velocity = Vector3.new(0, 0, 0)
+                hrp.CFrame = CFrame.new(hrp.Position.X, 15, hrp.Position.Z)
             end
         else
             hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
-            for _, v in pairs(char:GetChildren()) do
-                if v:IsA("BasePart") then v.CanTouch = true end
-            end
         end
     end
 end)
 
+-- ÖLÜMÜ SUNUCUDAN SAKLAMA (INSTANT REBIRTH)
+player.CharacterAdded:Connect(function(c)
+    local h = c:WaitForChild("Humanoid")
+    h.BreakJointsOnDeath = false -- Parçalanma
+end)
+
 --------------------------------------------------
--- TOGGLE & LOGO ANIMATION (BEYAZLIKSIZ YEŞİL)
+-- TOGGLE & LOGO ANIMATION (YEŞİL PARLAMA)
 --------------------------------------------------
 btn.MouseButton1Click:Connect(function()
     menu.Visible = not menu.Visible
