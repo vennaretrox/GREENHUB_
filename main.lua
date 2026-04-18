@@ -12,10 +12,10 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_FORSAKEN_ULTIMATE_SHIELD"
+gui.Name = "GREENHUB_ULTIMATE_GODMODE"
 
 --------------------------------------------------
--- LOGO & DRAG SYSTEM (TAMAMEN AYNI)
+-- LOGO & DRAG SYSTEM (DOKUNULMADI)
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
@@ -25,6 +25,7 @@ btn.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
 btn.TextColor3 = Color3.fromRGB(0, 255, 120)
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 22
+btn.AutoButtonColor = false
 
 local btnStroke = Instance.new("UIStroke", btn)
 btnStroke.Color = Color3.fromRGB(0, 120, 60)
@@ -59,7 +60,7 @@ end)
 UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 
 --------------------------------------------------
--- TITLE & SUBTITLE (ISTEDIĞIN GÖRÜNÜM)
+-- TITLE & SUBTITLE (BOZULMADI)
 --------------------------------------------------
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 35)
@@ -125,46 +126,45 @@ createButton("Anti-Attack: OFF", function(self)
 end)
 
 --------------------------------------------------
--- CORE LOOPS (SPEED + ABSOLUTE SHIELD)
+-- ULTRA CORE PROTECTION (SPEED + NO-DIE)
 --------------------------------------------------
-RunService.Heartbeat:Connect(function() -- Daha hızlı kontrol için Heartbeat
+RunService.RenderStepped:Connect(function()
     local char = player.Character
     if char then
         local hum = char:FindFirstChildOfClass("Humanoid")
         local hrp = char:FindFirstChild("HumanoidRootPart")
         
-        -- HIZ SİSTEMİ (BOZULMADI)
+        -- HIZ (BOZULMADI)
         if hyperActive and hrp and hum and hum.MoveDirection.Magnitude > 0 then
             hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         end
         
-        -- MUTLAK KORUMA (YETENEK SAVAR)
+        -- ÖLÜMSÜZLÜK DÖNGÜSÜ
         if antiAttackActive and hum then
-            -- Canın 0 olmasını veya azalmasını engelle
+            -- Can azalmaya başladığı an saniyede 60 kez 100'e sabitler
             if hum.Health > 0 and hum.Health < 100 then
-                hum.Health = 100 
+                hum.Health = 100
             end
-            
-            -- Ölme durumunu engelle (Anti-Instakill)
+            -- Ölüm sinyalini yerel olarak bloklar
             hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-            
-            -- Uzaktan gelen yetenekleri (Projectiles) bozmak için çevre kontrolü
-            for _, v in pairs(game.Workspace:GetChildren()) do
-                -- Eğer havada uçan bir yetenek objesi varsa ve sana yakınsa onu saptırır
-                if v:IsA("BasePart") and (v.Name:lower():find("projectile") or v.Name:lower():find("hitbox")) then
-                    if (v.Position - hrp.Position).Magnitude < 10 then
-                        v.CanTouch = false
-                    end
-                end
-            end
         elseif hum then
             hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
         end
     end
 end)
 
+-- EKSTRA KORUMA (Can değişimi sinyali yakalandığında)
+player.CharacterAdded:Connect(function(newChar)
+    local hum = newChar:WaitForChild("Humanoid")
+    hum:GetPropertyChangedSignal("Health"):Connect(function()
+        if antiAttackActive and hum.Health < 100 and hum.Health > 0 then
+            hum.Health = 100
+        end
+    end)
+end)
+
 --------------------------------------------------
--- TOGGLE & LOGO ANIMATION (BEYAZLIKSIZ SAF YEŞİL)
+-- TOGGLE & LOGO ANIMATION (YEŞİL PARLAMA)
 --------------------------------------------------
 btn.MouseButton1Click:Connect(function()
     menu.Visible = not menu.Visible
