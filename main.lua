@@ -12,7 +12,7 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V13_LAG_FREE"
+gui.Name = "GREENHUB_GUARDIAN_ULTRA"
 
 --------------------------------------------------
 -- LOGO & DRAG SYSTEM (SAF KOYU YEŞİL)
@@ -41,7 +41,7 @@ local menuStroke = Instance.new("UIStroke", menu)
 menuStroke.Color = Color3.fromRGB(0, 120, 0)
 menuStroke.Thickness = 4 
 
--- Drag Logic (Optimize Edildi)
+-- Drag Logic
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -72,7 +72,7 @@ local sub = Instance.new("TextLabel", menu)
 sub.Size = UDim2.new(1, 0, 0, 15)
 sub.Position = UDim2.new(0, 0, 0, 30)
 sub.BackgroundTransparency = 1
-sub.Text = "forsaken"
+sub.Text = "guardian"
 sub.TextColor3 = Color3.fromRGB(0, 100, 0)
 sub.Font = Enum.Font.GothamBlack
 sub.TextSize = 12
@@ -114,47 +114,67 @@ createButton("Anti-Attack: OFF", function(self)
 end)
 
 --------------------------------------------------
--- LAG-FREE SMART PROTECTION
+-- GUARDIAN SYSTEM (AURA & PUNISH)
 --------------------------------------------------
 
--- Koruma Döngüsü (Hafifletilmiş)
-RunService.Heartbeat:Connect(function()
-    local char = player.Character
-    if not char then return end
-    
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    
-    if not hrp or not hum then return end
-
-    -- HIZ SİSTEMİ
-    if hyperActive and hum.MoveDirection.Magnitude > 0 then
-        hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
-    end
-    
-    -- AKILLI ANTI-ATTACK
-    if antiAttackActive then
-        -- 1. Can Pompası (Milisaniyelik +10)
-        if hum.Health < 100 then
-            hum.Health = math.min(100, hum.Health + 10)
+-- Katili Cezalandırma Fonksiyonu
+local function punishKiller(killer)
+    local hum = killer:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.WalkSpeed = 4 -- Fena yavaşlat
+        -- Yetenekleri kapatma simülasyonu (Aletleri siler veya deaktive eder)
+        for _, tool in pairs(killer:GetChildren()) do
+            if tool:IsA("Tool") then tool.Parent = nil end
         end
         
-        -- 2. Ölüm Modunu Kapat (Karakterin dağılmasın)
-        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        -- 7 Saniye sonra geri getirme (isteğe bağlı)
+        task.delay(7, function()
+            if hum then hum.WalkSpeed = 16 end
+        end)
+    end
+end
+
+RunService.Heartbeat:Connect(function()
+    local char = player.Character
+    if not char or not antiAttackActive then return end
+    
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    
+    if hrp and hum then
+        -- 1. TRIPLE REGEN (3 Koldan Can)
+        hum.Health = 100
         
-        -- 3. Akıllı Buton Engelleme (Sadece yakınındakileri kontrol eder - FPS DÜŞÜRMEZ)
-        for _, obj in pairs(char:GetChildren()) do
-            if obj:IsA("ProximityPrompt") then obj.Enabled = false end
-            -- Katilin elindeki aletlerde butonu boz
-            if obj:IsA("Tool") and obj:FindFirstChildOfClass("ProximityPrompt") then
-                obj:FindFirstChildOfClass("ProximityPrompt").Enabled = false
+        -- 2. GÖRÜNMEZ DUVAR VE CEZALANDIRMA MANTIĞI
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local targetHrp = otherPlayer.Character.HumanoidRootPart
+                local dist = (hrp.Position - targetHrp.Position).Magnitude
+                
+                if dist < 8 then -- Eğer katil 8 metreden fazla yaklaşırsa
+                    -- Geri itme (Görünmez duvar etkisi)
+                    local pushDir = (targetHrp.Position - hrp.Position).Unit
+                    targetHrp.Velocity = pushDir * 50
+                    
+                    -- Cezalandır
+                    punishKiller(otherPlayer.Character)
+                end
             end
         end
 
-        -- 4. Anti-Void
-        if hrp.Position.Y < -40 then
-            hrp.Velocity = Vector3.new(0, 0, 0)
-            hrp.CFrame = CFrame.new(hrp.Position.X, 20, hrp.Position.Z)
+        -- 3. HIZ SİSTEMİ
+        if hyperActive and hum.MoveDirection.Magnitude > 0 then
+            hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
+        end
+    end
+end)
+
+-- EKSTRA CAN POMPASI (TASK SPAWN)
+task.spawn(function()
+    while task.wait() do
+        if antiAttackActive and player.Character then
+            local h = player.Character:FindFirstChildOfClass("Humanoid")
+            if h then h.Health = 100 end
         end
     end
 end)
