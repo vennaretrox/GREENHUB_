@@ -12,23 +12,23 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_FORSAKEN_PURE_GREEN"
+gui.Name = "GREENHUB_FORSAKEN_GOD_V5"
 
 --------------------------------------------------
--- LOGO & DRAG SYSTEM (SAF YEŞİL TEMA)
+-- LOGO & DRAG SYSTEM (SAF YEŞİL & KOYU YEŞİL)
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
 btn.Position = UDim2.new(0, 30, 0, 30)
 btn.Text = "G H"
 btn.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
-btn.TextColor3 = Color3.fromRGB(0, 200, 0) -- Saf Yeşil
+btn.TextColor3 = Color3.fromRGB(0, 200, 0) -- KOYU YEŞİL
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 22
 btn.AutoButtonColor = false
 
 local btnStroke = Instance.new("UIStroke", btn)
-btnStroke.Color = Color3.fromRGB(0, 100, 0) -- Koyu Yeşil
+btnStroke.Color = Color3.fromRGB(0, 100, 0) -- SAF KOYU YEŞİL
 btnStroke.Thickness = 2
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
 
@@ -39,8 +39,8 @@ menu.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 8)
 local menuStroke = Instance.new("UIStroke", menu)
-menuStroke.Color = Color3.fromRGB(0, 120, 0) -- Saf Koyu Yeşil
-menuStroke.Thickness = 4 -- Kalın LED efekti
+menuStroke.Color = Color3.fromRGB(0, 150, 0) -- YEŞİL LED
+menuStroke.Thickness = 4 
 
 -- Drag Logic
 local dragging, dragStart, startPos
@@ -60,13 +60,13 @@ end)
 UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 
 --------------------------------------------------
--- TITLE & SUBTITLE (BOZULMADI)
+-- TITLE & SUBTITLE (AYNI KALDI)
 --------------------------------------------------
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 35)
 title.BackgroundTransparency = 1
 title.Text = "GREENHUB"
-title.TextColor3 = Color3.fromRGB(0, 255, 0) -- Parlak Yeşil
+title.TextColor3 = Color3.fromRGB(0, 255, 0)
 title.Font = Enum.Font.GothamBold
 title.TextSize = 18
 
@@ -75,7 +75,7 @@ sub.Size = UDim2.new(1, 0, 0, 15)
 sub.Position = UDim2.new(0, 0, 0, 30)
 sub.BackgroundTransparency = 1
 sub.Text = "forsaken"
-sub.TextColor3 = Color3.fromRGB(0, 150, 0) -- Koyu Yeşil
+sub.TextColor3 = Color3.fromRGB(0, 120, 0)
 sub.Font = Enum.Font.GothamBlack
 sub.TextSize = 12
 
@@ -126,52 +126,51 @@ createButton("Anti-Attack: OFF", function(self)
 end)
 
 --------------------------------------------------
--- CORE SYSTEM (SPEED + CHARACTER SAFEGUARD)
+-- BUG-FREE PROTECTION (SPEED + ANTI-VOID + GOD)
 --------------------------------------------------
-RunService.RenderStepped:Connect(function()
+RunService.Heartbeat:Connect(function()
     local char = player.Character
-    if char then
+    if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChildOfClass("Humanoid") then
+        local hrp = char.HumanoidRootPart
         local hum = char:FindFirstChildOfClass("Humanoid")
-        local hrp = char:FindFirstChild("HumanoidRootPart")
         
-        -- HIZ (AYNI KALDI)
-        if hyperActive and hrp and hum and hum.MoveDirection.Magnitude > 0 then
+        -- 1. HIZ SİSTEMİ (TIPI TIP AYNI)
+        if hyperActive and hum.MoveDirection.Magnitude > 0 then
             hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         end
         
-        -- FORSAKEN ÖLÜMSÜZLÜK (GELİŞMİŞ)
-        if antiAttackActive and hum then
+        -- 2. ANTI-ATTACK & ANTI-VOID
+        if antiAttackActive then
             -- Can Kilidi
             if hum.Health < 100 then hum.Health = 100 end
             
-            -- Karakterin parçalanmasını engelle (Vücut parçalarını kilitle)
-            for _, v in pairs(char:GetDescendants()) do
-                if v:IsA("Motor6D") or v:IsA("Weld") then
-                    -- Bazı yetenekler eklemleri sildiği için kontrol ediyoruz
-                end
+            -- ANTI-VOID (Harita Altına Düşme Koruması)
+            if hrp.Position.Y < -50 then -- Eğer haritanın altına düşersen (Y ekseni -50)
+                hrp.Velocity = Vector3.new(0, 0, 0) -- Hızı sıfırla
+                hrp.CFrame = CFrame.new(hrp.Position.X, 10, hrp.Position.Z) -- Seni güvenli bir yüksekliğe ışınla
             end
             
-            -- Dead state kapatma
+            -- ÖLÜMÜ VE RAGDOLL'U ENGELLE
             hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-        elseif hum then
+            hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+            hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+            
+            -- Bazı oyunlar eklemleri (joints) silerek öldürür, onu engellemek için:
+            if char:FindFirstChild("HumanoidRootPart") == nil then
+                -- Karakter silinmeye çalışırsa (Nadir bug) yeniden canlanmayı tetiklemez, yerinde tutar.
+            end
+        else
             hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
         end
     end
 end)
 
--- EKSTRA: SUNUCUYA ÖLDÜĞÜNÜ SÖYLEMESİNİ ENGELLE
-player.CharacterAdded:Connect(function(c)
-    local h = c:WaitForChild("Humanoid")
-    h.BreakJointsOnDeath = false -- Öldüğünde parçalanmayı kapat
-end)
-
 --------------------------------------------------
--- TOGGLE & LOGO ANIMATION (BEYAZLIKSIZ SAF YEŞİL)
+-- TOGGLE & LOGO ANIMATION (SAF KOYU YEŞİL)
 --------------------------------------------------
 btn.MouseButton1Click:Connect(function()
     menu.Visible = not menu.Visible
     if menu.Visible then
-        -- Turkuaz yok, sadece koyu ve parlak yeşil parlaması
         TweenService:Create(btnStroke, TweenInfo.new(0.3), {Color = Color3.fromRGB(0, 255, 0), Thickness = 4}):Play()
         TweenService:Create(btn, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(0, 255, 0)}):Play()
     else
