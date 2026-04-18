@@ -12,10 +12,10 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_FORSAKEN_GOD"
+gui.Name = "GREENHUB_IMMORTAL_V25"
 
 --------------------------------------------------
--- LOGO & SOFT TWEEN (0.6s)
+-- LOGO & 0.6s PARILTI (EFSANE GEÇİŞ)
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
@@ -33,7 +33,7 @@ btnStroke.Thickness = 2
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
 
 --------------------------------------------------
--- MENU & TITLE (FORSAKEN GOTHAMBLACK)
+-- MENU (GOTHAMBLACK FORSAKEN)
 --------------------------------------------------
 local menu = Instance.new("Frame", gui)
 menu.Size = UDim2.fromOffset(225, 310)
@@ -71,7 +71,7 @@ btn.Activated:Connect(function()
     TweenService:Create(btnStroke, TweenInfo.new(0.6), {Color = targetColor, Thickness = menu.Visible and 3.5 or 2}):Play()
 end)
 
--- Drag
+-- Drag (Hatasız)
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = input.Position startPos = btn.Position end end)
 UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then local delta = input.Position - dragStart btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 65) end end)
@@ -110,37 +110,36 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- FORSAKEN GOD DEFENSE (ANTI-ANIM & LAG)
+-- THE ABSOLUTE ANTI-KILL SYSTEM
 --------------------------------------------------
 
--- E TUŞU: KATİLİ KÖR ET VE KARAKTERİNE BLOK KOY
+-- E TUŞU: KATİLİ "VOID"E ÇEK VE KÖR ET
 UIS.InputBegan:Connect(function(input, gpe)
     if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
         for _, v in pairs(Players:GetPlayers()) do
             if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
                 local vHrp = v.Character.HumanoidRootPart
-                if (player.Character.HumanoidRootPart.Position - vHrp.Position).Magnitude < 12 then
-                    -- 1. Görsel Engel (Onun ekranına siyahlık)
-                    local blind = Instance.new("Part", workspace)
-                    blind.Size = Vector3.new(20, 20, 20)
-                    blind.CFrame = vHrp.CFrame
-                    blind.Transparency = 0.5
-                    blind.Color = Color3.fromRGB(0,0,0)
-                    blind.Material = Enum.Material.Neon
-                    blind.CanCollide = false
-                    blind.Anchored = true
-                    task.delay(7, function() blind:Destroy() end)
+                if (player.Character.HumanoidRootPart.Position - vHrp.Position).Magnitude < 15 then
+                    -- 1. Fiziksel Körlük (Kafasına büyük siyah neon blok)
+                    local box = Instance.new("Part", v.Character)
+                    box.Name = "GreenHub_Blind"
+                    box.Size = Vector3.new(8, 8, 8)
+                    box.CFrame = vHrp.CFrame
+                    box.Color = Color3.fromRGB(0,0,0)
+                    box.Material = Enum.Material.Neon
+                    box.CanCollide = false
+                    local weld = Instance.new("Weld", box)
+                    weld.Part0 = box
+                    weld.Part1 = vHrp
                     
-                    -- 2. Zorunlu Lag (Onu 7 saniye boyunca zıt yöne ışınlar)
-                    local timer = 0
-                    local con
-                    con = RunService.Heartbeat:Connect(function()
-                        if timer < 7 and vHrp then
-                            vHrp.CFrame = vHrp.CFrame * CFrame.new(0, 0, 2) -- Onu sürekli geri iter
-                            timer = timer + 0.016
-                        else
-                            con:Disconnect()
+                    -- 2. Zorunlu Işınlama (7 Saniye Boyunca Geriye Atar)
+                    task.spawn(function()
+                        local start = tick()
+                        while tick() - start < 7 do
+                            if vHrp then vHrp.CFrame = vHrp.CFrame * CFrame.new(0, 0, 5) end
+                            task.wait()
                         end
+                        box:Destroy()
                     end)
                 end
             end
@@ -155,48 +154,55 @@ RunService.Heartbeat:Connect(function()
     local hum = char:FindFirstChildOfClass("Humanoid")
     if not hrp or not hum then return end
 
-    -- HIZ
+    -- HIZ (1.8X)
     if hyperActive and hum.MoveDirection.Magnitude > 0 then
         hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
     end
 
     if antiAttackActive then
-        -- 1. ANTI-ANIMATION (Kill Animasyonunu Durdurur)
+        -- 1. ANIMASYON KORUMASI (KATİLİN SENİ TUTMASINI ENGELLER)
         for _, track in pairs(hum:GetPlayingAnimationTracks()) do
-            track:Stop()
+            if track.Animation.AnimationId:find("kill") or track.Animation.AnimationId:find("attack") then
+                track:Stop()
+            end
         end
-        hum.PlatformStand = false -- Animasyonun seni dondurmasını engeller
+        hum.PlatformStand = false 
 
-        -- 2. CAN VE GHOST
-        hum.Health = 100
+        -- 2. DOKUNULMAZLIK (SERVER BYPASS)
         for _, p in pairs(char:GetChildren()) do
-            if p:IsA("BasePart") then p.CanTouch = false end
+            if p:IsA("BasePart") then 
+                p.CanTouch = false 
+                p.CanQuery = false
+            end
         end
 
-        -- 3. FORSAKEN ÖZEL LAG-BACK (3 Metre Yakınlık)
+        -- 3. LAG-BACK IŞINLAMA (KATİL SANA DEĞEMEZ BİLE)
         for _, v in pairs(Players:GetPlayers()) do
             if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
                 local vHrp = v.Character.HumanoidRootPart
                 local dist = (hrp.Position - vHrp.Position).Magnitude
                 
-                if dist < 4 then
-                    -- Katil dibine girdiğinde onu 15 metre geriye at (Lag etkisi)
-                    vHrp.CFrame = vHrp.CFrame * CFrame.new(0, 0, 15)
-                elseif dist < 10 then
-                    -- Yaklaşırken yavaşça geri it (Duvar)
-                    vHrp.CFrame = vHrp.CFrame * CFrame.new(0, 0, 1.2)
+                if dist < 6 then
+                    -- Katil 6 metreye girerse 25 metre geriye ışınlanır (Lag değil, direkt teleport)
+                    vHrp.CFrame = vHrp.CFrame * CFrame.new(0, 0, 25)
+                elseif dist < 12 then
+                    -- Yaklaşmaya çalıştıkça her saniye geriye itilir
+                    vHrp.CFrame = vHrp.CFrame * CFrame.new(0, 0, 2)
                 end
             end
         end
     end
 end)
 
--- ARKADAN CAN POMPALAMA
+-- ARKADAN MİLLİ-REGEN (ÖLÜMSÜZLÜK)
 task.spawn(function()
     while task.wait() do
         if antiAttackActive and player.Character then
             local h = player.Character:FindFirstChildOfClass("Humanoid")
-            if h then h.Health = 100 end
+            if h then 
+                h.Health = 100 
+                if h.Health <= 0 then h.Health = 100 end -- Ölmeyi reddet
+            end
         end
     end
 end)
