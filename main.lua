@@ -12,10 +12,10 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_FORSAKEN_GOD_EDITION"
+gui.Name = "GREENHUB_FORSAKEN_ULTIMATE_SHIELD"
 
 --------------------------------------------------
--- LOGO & DRAG SYSTEM (DEĞİŞİKLİK YOK)
+-- LOGO & DRAG SYSTEM (TAMAMEN AYNI)
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
@@ -41,7 +41,7 @@ local menuStroke = Instance.new("UIStroke", menu)
 menuStroke.Color = Color3.fromRGB(0, 120, 60)
 menuStroke.Thickness = 3.5
 
--- Drag Logic
+-- Drag Logic (Aynı)
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -59,7 +59,7 @@ end)
 UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 
 --------------------------------------------------
--- TITLE & SUBTITLE (AYNI KALDI)
+-- TITLE & SUBTITLE (ISTEDIĞIN GÖRÜNÜM)
 --------------------------------------------------
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 35)
@@ -125,47 +125,40 @@ createButton("Anti-Attack: OFF", function(self)
 end)
 
 --------------------------------------------------
--- CORE LOOPS (SPEED + FORSAKEN ABILITY SHIELD)
+-- CORE LOOPS (SPEED + ABSOLUTE SHIELD)
 --------------------------------------------------
-local lastHealth = 100
-
-RunService.RenderStepped:Connect(function()
+RunService.Heartbeat:Connect(function() -- Daha hızlı kontrol için Heartbeat
     local char = player.Character
-    if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") then
-        local hrp = char.HumanoidRootPart
-        local hum = char.Humanoid
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        local hrp = char:FindFirstChild("HumanoidRootPart")
         
-        -- HIZ SİSTEMİ (TIPI TIP AYNI)
-        if hyperActive and hum.MoveDirection.Magnitude > 0 then
+        -- HIZ SİSTEMİ (BOZULMADI)
+        if hyperActive and hrp and hum and hum.MoveDirection.Magnitude > 0 then
             hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         end
         
-        -- ANTI-ATTACK (YETENEK VE HASAR ENGELLEME)
-        if antiAttackActive then
-            -- 1. Can Sabitleme (Hasarı yerel olarak reddeder)
-            if hum.Health < lastHealth then
-                hum.Health = lastHealth
+        -- MUTLAK KORUMA (YETENEK SAVAR)
+        if antiAttackActive and hum then
+            -- Canın 0 olmasını veya azalmasını engelle
+            if hum.Health > 0 and hum.Health < 100 then
+                hum.Health = 100 
             end
-            lastHealth = hum.Health
             
-            -- 2. Yakın Çevre Temas Engelleyici
-            for _, other in pairs(Players:GetPlayers()) do
-                if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
-                    local dist = (hrp.Position - other.Character.HumanoidRootPart.Position).Magnitude
-                    if dist <= 25 then
-                        -- Katilin yetenek tetikleyicilerini (Hitbox) kapatır
-                        for _, part in pairs(other.Character:GetChildren()) do
-                            if part:IsA("BasePart") then part.CanTouch = false end
-                        end
-                    else
-                        for _, part in pairs(other.Character:GetChildren()) do
-                            if part:IsA("BasePart") then part.CanTouch = true end
-                        end
+            -- Ölme durumunu engelle (Anti-Instakill)
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+            
+            -- Uzaktan gelen yetenekleri (Projectiles) bozmak için çevre kontrolü
+            for _, v in pairs(game.Workspace:GetChildren()) do
+                -- Eğer havada uçan bir yetenek objesi varsa ve sana yakınsa onu saptırır
+                if v:IsA("BasePart") and (v.Name:lower():find("projectile") or v.Name:lower():find("hitbox")) then
+                    if (v.Position - hrp.Position).Magnitude < 10 then
+                        v.CanTouch = false
                     end
                 end
             end
-        else
-            lastHealth = hum.Health
+        elseif hum then
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
         end
     end
 end)
