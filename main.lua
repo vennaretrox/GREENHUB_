@@ -12,23 +12,23 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_FORSAKEN_GOD_V5"
+gui.Name = "GREENHUB_ULTRA_FORSAKEN_GOD"
 
 --------------------------------------------------
--- LOGO & DRAG SYSTEM (SAF YEŞİL & KOYU YEŞİL)
+-- LOGO & DRAG SYSTEM (SAF KOYU YEŞİL)
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
 btn.Position = UDim2.new(0, 30, 0, 30)
 btn.Text = "G H"
 btn.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
-btn.TextColor3 = Color3.fromRGB(0, 200, 0) -- KOYU YEŞİL
+btn.TextColor3 = Color3.fromRGB(0, 200, 0)
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 22
 btn.AutoButtonColor = false
 
 local btnStroke = Instance.new("UIStroke", btn)
-btnStroke.Color = Color3.fromRGB(0, 100, 0) -- SAF KOYU YEŞİL
+btnStroke.Color = Color3.fromRGB(0, 100, 0)
 btnStroke.Thickness = 2
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
 
@@ -39,7 +39,7 @@ menu.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 8)
 local menuStroke = Instance.new("UIStroke", menu)
-menuStroke.Color = Color3.fromRGB(0, 150, 0) -- YEŞİL LED
+menuStroke.Color = Color3.fromRGB(0, 150, 0)
 menuStroke.Thickness = 4 
 
 -- Drag Logic
@@ -105,68 +105,62 @@ end
 
 createButton("Hyper Speed: OFF", function(self)
     hyperActive = not hyperActive
-    if hyperActive then
-        self.Text = "Hyper Speed: ON"
-        self.TextColor3 = Color3.fromRGB(130, 0, 255) 
-    else
-        self.Text = "Hyper Speed: OFF"
-        self.TextColor3 = Color3.fromRGB(0, 200, 0)
-    end
+    self.Text = hyperActive and "Hyper Speed: ON" or "Hyper Speed: OFF"
+    self.TextColor3 = hyperActive and Color3.fromRGB(130, 0, 255) or Color3.fromRGB(0, 200, 0)
 end)
 
 createButton("Anti-Attack: OFF", function(self)
     antiAttackActive = not antiAttackActive
-    if antiAttackActive then
-        self.Text = "Anti-Attack: ON"
-        self.TextColor3 = Color3.fromRGB(130, 0, 255)
-    else
-        self.Text = "Anti-Attack: OFF"
-        self.TextColor3 = Color3.fromRGB(0, 200, 0)
-    end
+    self.Text = antiAttackActive and "Anti-Attack: ON" or "Anti-Attack: OFF"
+    self.TextColor3 = antiAttackActive and Color3.fromRGB(130, 0, 255) or Color3.fromRGB(0, 200, 0)
 end)
 
 --------------------------------------------------
--- BUG-FREE PROTECTION (SPEED + ANTI-VOID + GOD)
+-- ULTRA UPGRADE CORE (NO-DEATH BYPASS)
 --------------------------------------------------
-RunService.Heartbeat:Connect(function()
+RunService.Stepped:Connect(function()
     local char = player.Character
     if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChildOfClass("Humanoid") then
         local hrp = char.HumanoidRootPart
         local hum = char:FindFirstChildOfClass("Humanoid")
         
-        -- 1. HIZ SİSTEMİ (TIPI TIP AYNI)
+        -- HIZ (DOKUNULMADI)
         if hyperActive and hum.MoveDirection.Magnitude > 0 then
             hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         end
         
-        -- 2. ANTI-ATTACK & ANTI-VOID
+        -- ULTRA KORUMA
         if antiAttackActive then
-            -- Can Kilidi
+            -- Canı milisaniyelik 100'e kilitler (Sunucu paketini beklemez)
             if hum.Health < 100 then hum.Health = 100 end
             
-            -- ANTI-VOID (Harita Altına Düşme Koruması)
-            if hrp.Position.Y < -50 then -- Eğer haritanın altına düşersen (Y ekseni -50)
-                hrp.Velocity = Vector3.new(0, 0, 0) -- Hızı sıfırla
-                hrp.CFrame = CFrame.new(hrp.Position.X, 10, hrp.Position.Z) -- Seni güvenli bir yüksekliğe ışınla
+            -- ÖLÜMÜN TÜM YOLLARINI KAPATIR
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+            hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false) -- Darbe etkisini azaltır
+            
+            -- Anti-Void Upgrade
+            if hrp.Position.Y < -30 then
+                hrp.Velocity = Vector3.new(0, 0, 0)
+                hrp.CFrame = CFrame.new(hrp.Position.X, 20, hrp.Position.Z)
             end
             
-            -- ÖLÜMÜ VE RAGDOLL'U ENGELLE
-            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-            hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-            hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
-            
-            -- Bazı oyunlar eklemleri (joints) silerek öldürür, onu engellemek için:
-            if char:FindFirstChild("HumanoidRootPart") == nil then
-                -- Karakter silinmeye çalışırsa (Nadir bug) yeniden canlanmayı tetiklemez, yerinde tutar.
+            -- Katilin Karakterini ve Objeleri "Dokunulmaz" Yapar (Gelişmiş)
+            for _, v in pairs(char:GetChildren()) do
+                if v:IsA("BasePart") then
+                    v.CanTouch = false -- Senin parçaların hasar algılamasın
+                end
             end
         else
             hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+            for _, v in pairs(char:GetChildren()) do
+                if v:IsA("BasePart") then v.CanTouch = true end
+            end
         end
     end
 end)
 
 --------------------------------------------------
--- TOGGLE & LOGO ANIMATION (SAF KOYU YEŞİL)
+-- TOGGLE & LOGO ANIMATION (BEYAZLIKSIZ YEŞİL)
 --------------------------------------------------
 btn.MouseButton1Click:Connect(function()
     menu.Visible = not menu.Visible
