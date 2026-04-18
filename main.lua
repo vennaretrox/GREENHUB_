@@ -12,10 +12,10 @@ local hyperMultiplier = 1.8
 
 -- GUI CONTAINER
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_FORSAKEN_IMPERIAL"
+gui.Name = "GREENHUB_FORSAKEN_GOD_FINAL"
 
 --------------------------------------------------
--- LOGO & DRAG SYSTEM (TAM SAF YEŞİL)
+-- LOGO & DRAG SYSTEM (SAF KOYU YEŞİL TEMA)
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
@@ -25,10 +25,9 @@ btn.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
 btn.TextColor3 = Color3.fromRGB(0, 200, 0)
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 22
-btn.AutoButtonColor = false
 
 local btnStroke = Instance.new("UIStroke", btn)
-btnStroke.Color = Color3.fromRGB(0, 100, 0)
+btnStroke.Color = Color3.fromRGB(0, 80, 0)
 btnStroke.Thickness = 2
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
 
@@ -39,7 +38,7 @@ menu.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 8)
 local menuStroke = Instance.new("UIStroke", menu)
-menuStroke.Color = Color3.fromRGB(0, 150, 0)
+menuStroke.Color = Color3.fromRGB(0, 120, 0)
 menuStroke.Thickness = 4 
 
 -- Drag Logic
@@ -75,7 +74,7 @@ sub.Size = UDim2.new(1, 0, 0, 15)
 sub.Position = UDim2.new(0, 0, 0, 30)
 sub.BackgroundTransparency = 1
 sub.Text = "forsaken"
-sub.TextColor3 = Color3.fromRGB(0, 120, 0)
+sub.TextColor3 = Color3.fromRGB(0, 100, 0)
 sub.Font = Enum.Font.GothamBlack
 sub.TextSize = 12
 
@@ -98,7 +97,7 @@ local function createButton(text, callback)
     b.Font = Enum.Font.GothamMedium
     b.TextSize = 13
     Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
-    Instance.new("UIStroke", b).Color = Color3.fromRGB(30, 30, 30)
+    Instance.new("UIStroke", b).Color = Color3.fromRGB(40, 40, 40)
     b.MouseButton1Click:Connect(function() callback(b) end)
     return b
 end
@@ -116,43 +115,45 @@ createButton("Anti-Attack: OFF", function(self)
 end)
 
 --------------------------------------------------
--- MILLI-REGEN & GOD BYPASS
+-- DOUBLE-COLLISION LOCK & DUAL REGEN
 --------------------------------------------------
-RunService.PostSimulation:Connect(function() -- En son simülasyon aşamasında kontrol
+
+-- Koruma Döngüsü 1: Fizik Öncesi (Stepped)
+RunService.Stepped:Connect(function()
     local char = player.Character
-    if char and char:FindFirstChildOfClass("Humanoid") then
+    if char and antiAttackActive then
         local hum = char:FindFirstChildOfClass("Humanoid")
-        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hum then
+            -- Spam Koruma: Parçaları her milisaniye kapat
+            for _, p in pairs(char:GetChildren()) do
+                if p:IsA("BasePart") then p.CanTouch = false end
+            end
+            -- Hasar Filtresi: Canı her zaman doldur
+            if hum.Health < 100 then hum.Health = 100 end
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        end
+    end
+end)
+
+-- Koruma Döngüsü 2: Fizik Sonrası (Heartbeat) - HIZ BURADA
+RunService.Heartbeat:Connect(function()
+    local char = player.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local hrp = char.HumanoidRootPart
+        local hum = char:FindFirstChildOfClass("Humanoid")
         
-        -- HIZ (AYNI)
-        if hyperActive and hrp and hum.MoveDirection.Magnitude > 0 then
+        -- HIZ (ASLA DEĞİŞMEZ)
+        if hyperActive and hum and hum.MoveDirection.Magnitude > 0 then
             hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         end
         
-        -- ULTRA REGEN & GOD MODE
-        if antiAttackActive then
-            -- Can Kilidi + Her Milisaniye +10 Can (Milli-Regen)
-            if hum.Health < hum.MaxHealth then
-                hum.Health = math.min(hum.MaxHealth, hum.Health + 10)
-            end
-            
-            -- ÖLÜMÜN TÜM YOLLARINI KAPATIR
-            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-            
-            -- Uzaktan hasar gelmemesi için dokunma engelleyici (Force)
-            for _, v in pairs(char:GetDescendants()) do
-                if v:IsA("BasePart") then v.CanTouch = false end
-            end
-            
+        -- Double Check: İkinci can doldurma spamı
+        if antiAttackActive and hum then
+            if hum.Health < 100 then hum.Health = 100 end
             -- Anti-Void
-            if hrp and hrp.Position.Y < -40 then
-                hrp.Velocity = Vector3.new(0, 0, 0)
-                hrp.CFrame = CFrame.new(hrp.Position.X, 25, hrp.Position.Z)
-            end
-        else
-            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
-            for _, v in pairs(char:GetDescendants()) do
-                if v:IsA("BasePart") then v.CanTouch = true end
+            if hrp.Position.Y < -35 then
+                hrp.Velocity = Vector3.new(0,0,0)
+                hrp.CFrame = CFrame.new(hrp.Position.X, 20, hrp.Position.Z)
             end
         end
     end
