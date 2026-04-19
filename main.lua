@@ -8,11 +8,11 @@ local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local hyperActive = false
 local antiAttackActive = false 
-local hyperMultiplier = 2.3
+local hyperMultiplier = 2.1 -- Eski hız çarpanına geri çekildi
 
 -- SCREEN GUI
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V37_CRASH"
+gui.Name = "GREENHUB_V38_LEGACY"
 
 --------------------------------------------------
 -- SİNEMATİK LOGO & DRAG
@@ -73,7 +73,7 @@ UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == 
 UIS.InputEnded:Connect(function(input) dragging = false end)
 
 --------------------------------------------------
--- BUTTONS (DEV YAZILI)
+-- BUTTONS (BÜYÜK YAZILI)
 --------------------------------------------------
 local scroll = Instance.new("ScrollingFrame", menu)
 scroll.Size = UDim2.new(1, -20, 1, -120)
@@ -104,10 +104,10 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- PROTOCOL: ABSOLUTE ZERO (THE FREEZE)
+-- LOGIC (E-FREEZE & LEGACY SPEED)
 --------------------------------------------------
 
--- E TUŞU: 17 SANİYE CEHENNEM
+-- E TUŞU: 17 SANİYE MUTLAK DONMA
 UIS.InputBegan:Connect(function(input, gpe)
     if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
         for _, v in pairs(Players:GetPlayers()) do
@@ -117,24 +117,16 @@ UIS.InputBegan:Connect(function(input, gpe)
                     task.spawn(function()
                         local startTime = tick()
                         local originalCF = vHrp.CFrame
-                        
-                        -- 17 SANİYE BOYUNCA SUNUCUYU VE ADAMI KİLİTLE
                         while tick() - startTime < 17 do
                             if vHrp then
                                 vHrp.Anchored = true
-                                -- Şiddetli 360 Dönme ve Titreme (Göz yoran lag bombası)
-                                vHrp.CFrame = originalCF * CFrame.Angles(0, math.rad((tick() - startTime) * 3000), 0) 
+                                vHrp.CFrame = originalCF * CFrame.Angles(0, math.rad((tick() - startTime) * 3500), 0) 
                                             * CFrame.new(math.random(-1,1), math.random(-1,1), math.random(-1,1))
-                                
-                                -- Sunucuya saniyede 100 paket gönder (Lag Bombası)
-                                vHrp.Velocity = Vector3.new(999999, 999999, 999999)
+                                vHrp.Velocity = Vector3.new(99999, 99999, 99999)
                             end
-                            RunService.RenderStepped:Wait()
+                            RunService.Heartbeat:Wait()
                         end
-                        if vHrp then 
-                            vHrp.Anchored = false 
-                            vHrp.Velocity = Vector3.new(0,0,0)
-                        end
+                        if vHrp then vHrp.Anchored = false end
                     end)
                 end
             end
@@ -144,12 +136,12 @@ end)
 
 RunService.RenderStepped:Connect(function()
     local char = player.Character
-    if not char or not antiAttackActive then return end
+    if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart")
     local hum = char:FindFirstChildOfClass("Humanoid")
 
-    if hrp and hum then
-        -- Vücuda Çakılı Yeşil Zırh (Gecikmesiz)
+    if antiAttackActive and hrp and hum then
+        -- YEŞİL ZIRH
         for _, p in pairs(char:GetChildren()) do
             if p:IsA("BasePart") then
                 p.CanTouch = false
@@ -160,22 +152,20 @@ RunService.RenderStepped:Connect(function()
             end
         end
 
-        -- 25 Metre Koruma
+        -- 25M KORUMA
         for _, enemy in pairs(Players:GetPlayers()) do
             if enemy ~= player and enemy.Character and enemy.Character:FindFirstChild("HumanoidRootPart") then
                 local eHrp = enemy.Character.HumanoidRootPart
                 if (hrp.Position - eHrp.Position).Magnitude < 25 then
-                    eHrp.Velocity = Vector3.new(0, -5000, 0) -- Yere göm
+                    eHrp.Velocity = Vector3.new(0, -5000, 0)
                     eHrp.CFrame = eHrp.CFrame * CFrame.Angles(0, math.rad(45), 0)
                 end
             end
         end
-
-        -- Ölümsüzlük
         if hum.Health < 100 then hum.Health = 100 end
     end
 
-    -- Hız
+    -- LEGACY SPEED SYSTEM (ESKİ HIZIN TIPATIP AYNISI)
     if hyperActive and hum and hum.MoveDirection.Magnitude > 0 then
         hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
     end
