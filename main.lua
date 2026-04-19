@@ -12,9 +12,9 @@ local antiAttackActive = false
 local e_active = false
 local hyperMultiplier = 2.1
 
--- GUI TASARIMI (DOKUNULMADI)
+-- GUI TASARIMI (G H LOGO VE MENÜ)
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V56_FINAL"
+gui.Name = "GREENHUB_V57_GHOSTWIN"
 
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
@@ -38,6 +38,7 @@ menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 10)
 Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 255, 0)
 
+-- Başlıklar
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 40)
 title.Position = UDim2.new(0, 0, 0, 15)
@@ -63,6 +64,7 @@ btn.Activated:Connect(function()
     TweenService:Create(btnStroke, TweenInfo.new(0.6), {Color = isVis and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 40, 0), Thickness = isVis and 4 or 2.5}):Play()
 end)
 
+-- Sürükleme
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = input.Position startPos = btn.Position end end)
 UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then local delta = input.Position - dragStart btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 70) end end)
@@ -97,17 +99,17 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- MASTER CORE SYSTEM V56 (THE ONE)
+-- MASTER GHOST WIN SYSTEM (V57)
 --------------------------------------------------
 
-local mainCore = Instance.new("Part")
-mainCore.Name = "GreenUltimateCore"
-mainCore.Size = Vector3.new(2.8, 3.8, 1.8)
-mainCore.Material = Enum.Material.ForceField
-mainCore.Color = Color3.fromRGB(0, 255, 0)
-mainCore.Transparency = 0.4
-mainCore.CanCollide = false
-mainCore.CanTouch = false
+local centerCore = Instance.new("Part")
+centerCore.Name = "GreenPhantomCore"
+centerCore.Size = Vector3.new(2.5, 3.5, 1.5)
+centerCore.Material = Enum.Material.ForceField
+centerCore.Color = Color3.fromRGB(0, 255, 0)
+centerCore.Transparency = 0.4
+centerCore.CanCollide = false
+centerCore.CanTouch = false
 
 UIS.InputBegan:Connect(function(input, gpe)
     if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
@@ -126,23 +128,23 @@ RunService.Heartbeat:Connect(function()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hum or not hrp then return end
 
-    -- LEGACY HYPER SPEED
+    -- 1. LEGACY HYPER SPEED
     if hyperActive and hum.MoveDirection.Magnitude > 0 then
         hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
     end
 
-    -- ANTI-ATTACK & SHIELD LOCK
+    -- 2. GHOST WIN & ANTI-ATTACK
     if antiAttackActive then
-        -- MEGA DEATH BYPASS
+        -- MÜTHİŞ FİKİR: Ölü Görünüp Turda Kalma
         hum.MaxHealth = 1e18
         hum.Health = 1e18
-        hum.BreakJointsOnDeath = false
-        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        hum.BreakJointsOnDeath = false -- Parçalanmayı engelle
+        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false) -- Ölüm durumunu kilitle
 
-        -- SABİTLEME (GHOST LOCK)
-        mainCore.Parent = char
-        mainCore.CFrame = hrp.CFrame
+        -- TEK VE SABİT NEON BLOK (Arkadaki kalkan silindi)
+        centerCore.Parent = char
+        centerCore.CFrame = hrp.CFrame
         
         for _, p in pairs(char:GetChildren()) do
             if p:IsA("BasePart") then
@@ -153,7 +155,7 @@ RunService.Heartbeat:Connect(function()
             end
         end
 
-        -- E TUŞU DOOM (5 SN)
+        -- E TUŞU: DOOM MODU
         for _, other in pairs(Players:GetPlayers()) do
             if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
                 local oHrp = other.Character.HumanoidRootPart
@@ -162,9 +164,9 @@ RunService.Heartbeat:Connect(function()
                 
                 if dist < 25 then
                     if e_active then
-                        oHrp.CFrame = oHrp.CFrame * CFrame.new(0, 0, 1.8) -- Geri itme
-                        oHrp.CFrame = oHrp.CFrame * CFrame.Angles(0, math.rad(120), 0) -- Kasırga
-                        oHrp.Velocity = Vector3.new(0, -90, 2) -- Hafif Lag Titremesi
+                        oHrp.CFrame = oHrp.CFrame * CFrame.new(0, 30, 2) -- Geri itme
+                        oHrp.CFrame = oHrp.CFrame * CFrame.Angles(0, math.rad(180), 0) -- Kasırga
+                        oHrp.Velocity = Vector3.new(math.random(-5,5), -30, math.random(-5,5)) -- Lag
                         if oHum then oHum.WalkSpeed = 0 end
                     else
                         if oHum then oHum.WalkSpeed = 16 end
@@ -174,15 +176,15 @@ RunService.Heartbeat:Connect(function()
             end
         end
     else
-        mainCore.Parent = nil
+        centerCore.Parent = nil
     end
 end)
 
--- 100 KATMANLI REGEN (ASLA ÖLMEZ)
-for i = 1, 700 do
+-- 100 KATMANLI REGEN
+for i = 1, 100 do
     task.spawn(function()
         while true do
-            if antiAttackActive and player.Character then
+            if antiAttackActive then
                 pcall(function() player.Character.Humanoid.Health = 1e18 end)
             end
             task.wait()
