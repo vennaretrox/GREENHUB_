@@ -4,6 +4,7 @@ local CoreGui = game:GetService("CoreGui")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
 
 local player = Players.LocalPlayer
 local hyperActive = false
@@ -11,9 +12,9 @@ local antiAttackActive = false
 local e_active = false
 local hyperMultiplier = 2.1
 
--- SCREEN GUI (LOGON VE MENÜN TIPA TIP AYNI)
+-- SCREEN GUI (HER ŞEY TIPA TIP AYNI)
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V45_PHANTOM"
+gui.Name = "GREENHUB_V47_FINAL"
 
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
@@ -96,11 +97,11 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- GHOST SYSTEM & AGGRESSIVE LAG
+-- MASTER CORE & COLOR-BYPASS
 --------------------------------------------------
 
 local ghostBlock = Instance.new("Part")
-ghostBlock.Size = Vector3.new(2.2, 3.2, 1.2)
+ghostBlock.Size = Vector3.new(2.1, 3.1, 1.1)
 ghostBlock.Color = Color3.fromRGB(0, 255, 0)
 ghostBlock.Material = Enum.Material.ForceField
 ghostBlock.Transparency = 0.7
@@ -110,12 +111,21 @@ ghostBlock.CanTouch = false
 UIS.InputBegan:Connect(function(input, gpe)
     if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
         e_active = true
-        task.wait(3) -- Tam 3 saniye Full+10 Lag
+        task.wait(3) -- Full+10 Lag 3 saniye
         e_active = false
     end
 end)
 
 RunService.RenderStepped:Connect(function()
+    -- SİYAH BEYAZ EKRAN ENGELLEYİCİ (HER ZAMAN AKTİF)
+    for _, effect in pairs(Lighting:GetChildren()) do
+        if effect:IsA("ColorCorrectionEffect") or effect:IsA("BloomEffect") then
+            effect.Saturation = 0 -- Standart renk değerini koru
+            effect.Contrast = 0
+            effect.TintColor = Color3.fromRGB(255, 255, 255)
+        end
+    end
+
     local char = player.Character
     if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart")
@@ -129,38 +139,40 @@ RunService.RenderStepped:Connect(function()
     end
 
     if antiAttackActive then
-        -- SENİN KODUN (IMMORTAL CORE)
+        -- PROXIMITY PROMPT BYPASS
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("ProximityPrompt") and (obj.ObjectText == "Hayatta Kalan" or obj.ActionText == "Öldür") then
+                obj.Enabled = false
+                obj.MaxActivationDistance = 0
+            end
+        end
+
+        -- IMMORTAL CORE (SENİN KODUN)
         hum.MaxHealth = math.huge
         hum.Health = math.huge
         hum.BreakJointsOnDeath = false
         hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
 
-        -- GHOST BLOCK & HAVALI GÖRÜNÜM
+        -- PHANTOM LOOK
         ghostBlock.Parent = char
         ghostBlock.CFrame = hrp.CFrame
-        for _, p in pairs(char:GetDescendants()) do
+        for _, p in pairs(char:GetChildren()) do
             if p:IsA("BasePart") then
                 p.CanCollide = false
-                if p ~= ghostBlock then
-                    p.Transparency = 0.7
-                    p.Color = Color3.fromRGB(0, 255, 0)
-                    p.Material = Enum.Material.ForceField
-                end
+                p.Transparency = 0.7
+                p.Color = Color3.fromRGB(0, 255, 0)
+                p.Material = Enum.Material.ForceField
             end
         end
 
-        -- LAG SİSTEMİ (PASİF & E-AKTİF)
+        -- LAG SYSTEM (PASIF 45, E-TUŞU 110 DERECE)
         for _, enemy in pairs(Players:GetPlayers()) do
             if enemy ~= player and enemy.Character and enemy.Character:FindFirstChild("HumanoidRootPart") then
                 local eHrp = enemy.Character.HumanoidRootPart
-                local dist = (hrp.Position - eHrp.Position).Magnitude
-                if dist < 25 then
-                    local lagIntensity = e_active and 120 or 45 -- E basınca 120, basmayınca 45 derece dönme
-                    eHrp.CFrame = eHrp.CFrame * CFrame.Angles(0, math.rad(lagIntensity), 0)
+                if (hrp.Position - eHrp.Position).Magnitude < 25 then
+                    local lag = e_active and 110 or 45
+                    eHrp.CFrame = eHrp.CFrame * CFrame.Angles(0, math.rad(lag), 0)
                     eHrp.Velocity = Vector3.new(0, -5000, 0)
-                    if e_active then
-                        eHrp.CFrame = eHrp.CFrame * CFrame.new(math.random(-2,2), 0, math.random(-2,2))
-                    end
                 end
             end
         end
@@ -169,7 +181,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 80X MEGA REGEN LAYER (CAN POMPALAMA)
+-- 80X MEGA REGEN
 for i = 1, 80 do
     task.spawn(function()
         while true do
