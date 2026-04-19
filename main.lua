@@ -12,9 +12,9 @@ local antiAttackActive = false
 local e_active = false
 local hyperMultiplier = 2.1
 
--- SCREEN GUI (LOGON VE MENÜN DEĞİŞMEZ)
+-- SCREEN GUI (LOGON, MENÜ VE TUŞLARIN AYNI)
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V52_PERMANENT"
+gui.Name = "GREENHUB_V54_FREEZE"
 
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
@@ -38,6 +38,7 @@ menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 10)
 Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 255, 0)
 
+-- Menü Başlıkları
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 40)
 title.Position = UDim2.new(0, 0, 0, 15)
@@ -63,7 +64,7 @@ btn.Activated:Connect(function()
     TweenService:Create(btnStroke, TweenInfo.new(0.6), {Color = isVis and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 40, 0), Thickness = isVis and 4 or 2.5}):Play()
 end)
 
--- Sürükleme
+-- Sürükleme Sistemi
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = input.Position startPos = btn.Position end end)
 UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then local delta = input.Position - dragStart btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 70) end end)
@@ -98,19 +99,19 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- MASTER CORE PERMANENT SYSTEM
+-- MASTER NEON FREEZE SYSTEM (V54)
 --------------------------------------------------
 
-local ghostPart = Instance.new("Part")
-ghostPart.Name = "GreenShieldForever"
-ghostPart.Size = Vector3.new(2.1, 3.1, 1.1)
-ghostPart.Material = Enum.Material.ForceField
-ghostPart.Color = Color3.fromRGB(0, 255, 0)
-ghostPart.Transparency = 0.5
-ghostPart.CanCollide = false
-ghostPart.CanTouch = false
+local neonCore = Instance.new("Part")
+neonCore.Name = "NeonPhantomHeart"
+neonCore.Size = Vector3.new(2.4, 3.4, 1.4)
+neonCore.Material = Enum.Material.ForceField
+neonCore.Color = Color3.fromRGB(0, 255, 0)
+neonCore.Transparency = 0.3
+neonCore.CanCollide = false
+neonCore.CanTouch = false
 
--- E Tuşu 5 Saniye Lag
+-- E TUŞU: 5 SANİYE DONDURUCU KASIRGA
 UIS.InputBegan:Connect(function(input, gpe)
     if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
         e_active = true
@@ -119,10 +120,8 @@ UIS.InputBegan:Connect(function(input, gpe)
     end
 end)
 
--- Siyah Beyaz Engelleyici (Stabil)
 RunService.Heartbeat:Connect(function()
-    local cc = Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
-    if cc then cc.Saturation = 0 end
+    pcall(function() Lighting.ColorCorrection.Saturation = 0 end)
 
     local char = player.Character
     if not char then return end
@@ -130,55 +129,63 @@ RunService.Heartbeat:Connect(function()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hum or not hrp then return end
 
-    -- 1. LEGACY HYPER SPEED (SADECE TUŞA BAĞLI)
+    -- 1. LEGACY HYPER SPEED
     if hyperActive and hum.MoveDirection.Magnitude > 0 then
         hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
     end
 
-    -- 2. PERMANENT ANTI-ATTACK
+    -- 2. ANTI-ATTACK & FREEZE
     if antiAttackActive then
-        -- Anti-Die Ultra Upgrade
+        -- Ultra Ölümsüzlük
         hum.MaxHealth = math.huge
         hum.Health = math.huge
         hum.BreakJointsOnDeath = false
         hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
 
-        -- Görsel & Hayalet Modu
-        ghostPart.Parent = char
-        ghostPart.CFrame = hrp.CFrame
+        -- Neon Blok & Havalı Görünüm
+        neonCore.Parent = char
+        neonCore.CFrame = hrp.CFrame
         for _, p in pairs(char:GetChildren()) do
             if p:IsA("BasePart") then
                 p.CanCollide = false
-                p.Transparency = 0.7
+                p.Transparency = 0.6
                 p.Color = Color3.fromRGB(0, 255, 50)
+                p.Material = Enum.Material.ForceField
             end
         end
 
-        -- Kasırga Lag Sistemi (Sadece Rakiplere)
+        -- RAKİPLERİ DONDURAN KASIRGA SİSTEMİ
         for _, other in pairs(Players:GetPlayers()) do
             if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
                 local oHrp = other.Character.HumanoidRootPart
+                local oHum = other.Character:FindFirstChildOfClass("Humanoid")
+                
                 if (hrp.Position - oHrp.Position).Magnitude < 25 then
-                    local rot = e_active and 120 or 30
-                    oHrp.CFrame = oHrp.CFrame * CFrame.Angles(0, math.rad(rot), 0)
-                    if e_active then oHrp.Velocity = Vector3.new(0, -500, 0) end
+                    if e_active then
+                        -- E AKTİF: 5 Saniye Hareket Edemezler ve Dönerler
+                        oHrp.CFrame = oHrp.CFrame * CFrame.Angles(0, math.rad(110), 0)
+                        oHrp.Velocity = Vector3.new(0,0,0) -- İvmeyi sıfırla
+                        if oHum then oHum.WalkSpeed = 0 end -- Yürüyemezler
+                    else
+                        -- Pasif: Hafif Lag, Hareket Serbest
+                        oHrp.CFrame = oHrp.CFrame * CFrame.Angles(0, math.rad(25), 0)
+                        if oHum then oHum.WalkSpeed = 16 end
+                    end
                 end
             end
         end
     else
-        ghostPart.Parent = nil
+        neonCore.Parent = nil
     end
 end)
 
--- 80X MEGA REGEN (YENİLENEN KARAKTERE ODAKLI)
+-- MEGA REGEN
 task.spawn(function()
     while true do
         if antiAttackActive then
-            pcall(function()
-                player.Character.Humanoid.Health = player.Character.Humanoid.MaxHealth
-            end)
+            pcall(function() player.Character.Humanoid.Health = math.huge end)
         end
-        task.wait()
+        task.wait(0.1)
     end
 end)
