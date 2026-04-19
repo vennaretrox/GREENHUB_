@@ -8,39 +8,38 @@ local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local hyperActive = false
 local antiAttackActive = false 
-local hyperMultiplier = 1.9
+local hyperMultiplier = 2.0
 
 -- SCREEN GUI
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V30_GLOW"
+gui.Name = "GREENHUB_V32_EMERALD"
 
 --------------------------------------------------
--- LOGO & SİNEMATİK PARILTI (0.6s)
+-- SİNEMATİK LOGO (0.6s PARILTI)
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
 btn.Position = UDim2.new(0, 50, 0, 50)
 btn.Text = "G H"
 btn.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
-btn.TextColor3 = Color3.fromRGB(0, 80, 0) -- Başlangıçta sönük
+btn.TextColor3 = Color3.fromRGB(0, 80, 0)
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 20
 btn.ZIndex = 10
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
 
 local btnStroke = Instance.new("UIStroke", btn)
-btnStroke.Color = Color3.fromRGB(0, 40, 0) -- Başlangıçta sönük kenarlık
+btnStroke.Color = Color3.fromRGB(0, 40, 0)
 btnStroke.Thickness = 2
 
 --------------------------------------------------
--- MENU (FORSAKEN GOTHAMBLACK)
+-- MENU (GOTHAMBLACK FORSAKEN)
 --------------------------------------------------
 local menu = Instance.new("Frame", gui)
 menu.Size = UDim2.fromOffset(225, 310)
 menu.Position = UDim2.new(0, 50, 0, 115)
 menu.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
 menu.Visible = false
-menu.BackgroundTransparency = 0.1
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 8)
 local menuStroke = Instance.new("UIStroke", menu)
 menuStroke.Color = Color3.fromRGB(0, 150, 0)
@@ -64,29 +63,23 @@ sub.TextColor3 = Color3.fromRGB(0, 120, 0)
 sub.Font = Enum.Font.GothamBlack
 sub.TextSize = 12
 
--- SINEMATİK PARILTI LOGIC (0.6S TWEEN)
+-- Glow Animation
 btn.Activated:Connect(function()
     menu.Visible = not menu.Visible
-    
     local isVisible = menu.Visible
     local targetText = isVisible and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 80, 0)
     local targetStroke = isVisible and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 40, 0)
-    local targetThickness = isVisible and 3.5 or 2
     
-    -- Yavaşça parlayıp sönme animasyonu
     TweenService:Create(btn, TweenInfo.new(0.6, Enum.EasingStyle.Quart), {TextColor3 = targetText}):Play()
-    TweenService:Create(btnStroke, TweenInfo.new(0.6, Enum.EasingStyle.Quart), {Color = targetStroke, Thickness = targetThickness}):Play()
+    TweenService:Create(btnStroke, TweenInfo.new(0.6, Enum.EasingStyle.Quart), {Color = targetStroke, Thickness = isVisible and 3.5 or 2}):Play()
 end)
 
--- Dragging System
+-- Dragging
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = input.Position startPos = btn.Position end end)
 UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then local delta = input.Position - dragStart btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 65) end end)
 UIS.InputEnded:Connect(function(input) dragging = false end)
 
---------------------------------------------------
--- BUTTONS (ON: MOR / OFF: YEŞİL)
---------------------------------------------------
 local scroll = Instance.new("ScrollingFrame", menu)
 scroll.Size = UDim2.new(1, -20, 1, -100)
 scroll.Position = UDim2.new(0, 10, 0, 75)
@@ -103,11 +96,9 @@ local function createButton(text, callback)
     b.Font = Enum.Font.GothamMedium
     b.TextSize = 13
     Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
-    
     local active = false
     b.MouseButton1Click:Connect(function()
         active = not active
-        -- Renk Geçiş Animasyonu
         local targetColor = active and Color3.fromRGB(140, 0, 255) or Color3.fromRGB(0, 200, 0)
         TweenService:Create(b, TweenInfo.new(0.3), {TextColor3 = targetColor}):Play()
         b.Text = text .. (active and ": ON" or ": OFF")
@@ -119,41 +110,27 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- ULTRA DEFENSE LOGIC (FORSAKEN)
+-- EMERALD PROTECTION & FREEZE LAGG
 --------------------------------------------------
 
--- E TUŞU: BLACKOUT PRISON (SABİTLE VE DÖNDÜR)
+-- E TUŞU: TOTAL FREEZE (7 SANİYE)
 UIS.InputBegan:Connect(function(input, gpe)
     if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
         for _, v in pairs(Players:GetPlayers()) do
             if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
                 local vHrp = v.Character.HumanoidRootPart
                 if (player.Character.HumanoidRootPart.Position - vHrp.Position).Magnitude < 17 then
-                    local prison = Instance.new("Part", workspace)
-                    prison.Shape = Enum.PartType.Ball
-                    prison.Size = Vector3.new(15, 15, 15)
-                    prison.CFrame = vHrp.CFrame
-                    prison.Color = Color3.fromRGB(0, 0, 0)
-                    prison.Material = Enum.Material.Neon
-                    prison.Anchored = true
-                    prison.CanCollide = false
-                    
-                    local smk = Instance.new("Smoke", prison)
-                    smk.Color = Color3.fromRGB(0,0,0)
-                    smk.Size = 25
-                    
                     task.spawn(function()
+                        local startPos = vHrp.CFrame
                         local t = 0
                         while t < 7 do
                             if vHrp then
-                                vHrp.CFrame = prison.CFrame * CFrame.Angles(0, math.rad(t * 1800), 0)
-                                vHrp.Anchored = true -- Kesin sabitleme
+                                vHrp.Anchored = true
+                                vHrp.CFrame = startPos * CFrame.new(math.random(-0.02, 0.02), 0, math.random(-0.02, 0.02))
                             end
-                            t = t + 0.016
-                            task.wait(0.01)
+                            t = t + task.wait()
                         end
                         if vHrp then vHrp.Anchored = false end
-                        prison:Destroy()
                     end)
                 end
             end
@@ -168,20 +145,26 @@ RunService.Heartbeat:Connect(function()
     local hum = char:FindFirstChildOfClass("Humanoid")
 
     if antiAttackActive then
-        -- GHOST MODE
+        -- 1. YEŞİL SAYDAM KORUMA (TAM VÜCUDA SABİT)
         for _, p in pairs(char:GetChildren()) do
-            if p:IsA("BasePart") then p.CanTouch = false p.CanQuery = false p.Transparency = 0.5 end
+            if p:IsA("BasePart") then
+                p.CanTouch = false
+                p.CanQuery = false
+                p.Color = Color3.fromRGB(0, 255, 100) -- HAFİF YEŞİL
+                p.Transparency = 0.6 -- SAYDAM
+                p.Material = Enum.Material.ForceField -- YEŞİL PARILTI EFEKTİ
+            end
         end
 
-        -- 40 KATMANLI LAG BOMBASI
+        -- 2. ULTRA LAG BOMBASI (40 KATMAN - 17M)
         for _, v in pairs(Players:GetPlayers()) do
             if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
                 local vHrp = v.Character.HumanoidRootPart
                 local dist = (hrp.Position - vHrp.Position).Magnitude
                 if dist < 17 then
-                    -- Katili sürekli geri itip sarsar
-                    vHrp.CFrame = vHrp.CFrame * CFrame.new(0, 0, 3.5)
-                    vHrp.Velocity = Vector3.new(math.random(-60,60), 0, math.random(-60,60))
+                    -- Lag şiddeti artırıldı: Rastgele eksenlerde aşırı geri itme
+                    vHrp.CFrame = vHrp.CFrame * CFrame.new(0, 0, 5) 
+                    vHrp.Velocity = Vector3.new(math.random(-100,100), -500, math.random(-100,100))
                 end
             end
         end
@@ -192,13 +175,16 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- ULTRA 10X REGEN
+-- 10X CAN POMPALAMA (KESİN ÖLÜMSÜZLÜK)
 for i = 1, 10 do
     task.spawn(function()
         while true do
             if antiAttackActive and player.Character then
                 local h = player.Character:FindFirstChildOfClass("Humanoid")
-                if h then h.Health = 100 end
+                if h then 
+                    h.Health = 100 
+                    if h.Health < 100 then h.Health = 100 end
+                end
             end
             RunService.RenderStepped:Wait()
         end
