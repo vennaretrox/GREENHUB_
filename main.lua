@@ -8,15 +8,12 @@ local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local hyperActive = false
 local antiAttackActive = false 
-local hyperMultiplier = 2.1
+local hyperMultiplier = 2.1 -- Senin o sevdiğin Legacy Speed çarpanı
 
--- SCREEN GUI
+-- SCREEN GUI (MENÜ TASARIMI TIPA TIP AYNI)
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V41_FINAL"
+gui.Name = "GREENHUB_V42_MASTER"
 
---------------------------------------------------
--- MENÜ VE LOGO (TIPA TIP AYNI)
---------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
 btn.Position = UDim2.new(0, 50, 0, 50)
@@ -57,6 +54,7 @@ sub.TextColor3 = Color3.fromRGB(0, 120, 0)
 sub.Font = Enum.Font.GothamBlack
 sub.TextSize = 15
 
+-- Menü Açılış Efekti
 btn.Activated:Connect(function()
     menu.Visible = not menu.Visible
     local isVis = menu.Visible
@@ -64,6 +62,7 @@ btn.Activated:Connect(function()
     TweenService:Create(btnStroke, TweenInfo.new(0.6), {Color = isVis and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 40, 0), Thickness = isVis and 4 or 2.5}):Play()
 end)
 
+-- Sürükleme
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = input.Position startPos = btn.Position end end)
 UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then local delta = input.Position - dragStart btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 70) end end)
@@ -98,10 +97,10 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- FORSAKEN BYPASS LOGIC
+-- ESKİ SİSTEMLERİN KARIŞIMI (BEST LAG & FREEZE)
 --------------------------------------------------
 
--- E TUŞU: 17 SANİYE CRASH LAG
+-- E TUŞU: 17 SANİYE BOYUNCA ESKİ USUL LAG + 360 SPIN
 UIS.InputBegan:Connect(function(input, gpe)
     if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
         for _, v in pairs(Players:GetPlayers()) do
@@ -112,12 +111,10 @@ UIS.InputBegan:Connect(function(input, gpe)
                         local start = tick()
                         while tick() - start < 17 do
                             if vHrp then
+                                -- ESKİ ÇALIŞAN METOD: ANCHOR + SPIN + VELOCITY BOMB
                                 vHrp.Anchored = true
-                                -- ŞİDDETLİ LAG VE DÖNME (CRASH MODU)
-                                vHrp.CFrame = vHrp.CFrame * CFrame.Angles(0, math.rad(90), 0)
-                                vHrp.Velocity = Vector3.new(0, 1000000, 0)
-                                -- Katilin sunucuyla olan senkronizasyonunu boz
-                                settings().Physics.PhysicsEnvironmentalThrottle = 1
+                                vHrp.CFrame = vHrp.CFrame * CFrame.Angles(0, math.rad(60), 0)
+                                vHrp.Velocity = Vector3.new(math.random(-500,500), 1000, math.random(-500,500))
                             end
                             RunService.Heartbeat:Wait()
                         end
@@ -129,61 +126,58 @@ UIS.InputBegan:Connect(function(input, gpe)
     end
 end)
 
--- ANA KORUMA DÖNGÜSÜ
-RunService.Stepped:Connect(function()
+RunService.RenderStepped:Connect(function()
     local char = player.Character
     if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart")
     local hum = char:FindFirstChildOfClass("Humanoid")
 
-    -- 1. BAĞIMSIZ LEGACY SPEED
+    -- 1. LEGACY SPEED (FLY HATASI VERMEYEN TİP)
     if hyperActive and hrp and hum and hum.MoveDirection.Magnitude > 0 then
         hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
+        -- Fly hatasını engellemek için yer çekimiyle senkronize et
+        hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
     end
 
-    -- 2. ANTI-ATTACK & ANTI-LOBBY
+    -- 2. MASTER ANTI-ATTACK (VÜCUT SABİTLEME)
     if antiAttackActive and hrp and hum then
-        -- VÜCUDA ÇAKILI YEŞİL ZIRH
-        for _, p in pairs(char:GetDescendants()) do
+        -- Kalkan geride kalmasın diye vücut parçalarını direkt modifiye et
+        for _, p in pairs(char:GetChildren()) do
             if p:IsA("BasePart") then
-                p.CanTouch = false
-                p.CanQuery = false
                 p.Color = Color3.fromRGB(0, 255, 50)
                 p.Material = Enum.Material.ForceField
                 p.Transparency = 0.5
+                p.CanTouch = false
             end
         end
 
-        -- LOBBY'YE IŞINLANMAYI ENGELLE (ANTI-VOID)
-        hrp.Velocity = Vector3.new(0, 0, 0) -- Işınlanma hızını sıfırla
-        
-        -- KATİLLERİ DONDUR VE DÖNDÜR
+        -- ESKİ ÇEVRESEL LAG (YAKLAŞANI DÖNDÜR VE İT)
         for _, enemy in pairs(Players:GetPlayers()) do
             if enemy ~= player and enemy.Character and enemy.Character:FindFirstChild("HumanoidRootPart") then
                 local eHrp = enemy.Character.HumanoidRootPart
                 local dist = (hrp.Position - eHrp.Position).Magnitude
-                if dist < 30 then
-                    -- GERÇEK DONMA VE 360 DÖNME
-                    eHrp.CFrame = eHrp.CFrame * CFrame.Angles(0, math.rad(45), 0)
-                    eHrp.AssemblyLinearVelocity = Vector3.new(0, -1000, 0)
+                if dist < 25 then
+                    -- Tıpatıp eski lag sistemi
+                    eHrp.Velocity = Vector3.new(0, -3000, 0) 
+                    eHrp.CFrame = eHrp.CFrame * CFrame.Angles(0, math.rad(30), 0)
                 end
             end
         end
 
-        -- ÖLÜMSÜZLÜK
+        -- Ölümsüzlük (Lobby ışınlamasına karşı bypass)
         if hum.Health < 100 then hum.Health = 100 end
     end
 end)
 
--- 70X MEGA REGEN (LOBBY IŞINLAMASINA KARŞI SÜREKLİ YAPIlandırma)
-for i = 1, 70 do
+-- 80X REGEN (Saniyede binlerce can, en agresif seviye)
+for i = 1, 80 do
     task.spawn(function()
         while true do
             if antiAttackActive and player.Character then
-                local hum = player.Character:FindFirstChildOfClass("Humanoid")
-                if hum then
-                    hum.Health = 100
-                    hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+                local h = player.Character:FindFirstChildOfClass("Humanoid")
+                if h then 
+                    h.Health = 100 
+                    h:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
                 end
             end
             task.wait()
