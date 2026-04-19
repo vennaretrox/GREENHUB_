@@ -10,11 +10,11 @@ local player = Players.LocalPlayer
 local hyperActive = false
 local antiAttackActive = false 
 local e_active = false
-local hyperMultiplier = 2.1 -- Efsanevi Hızın
+local hyperMultiplier = 2.1
 
--- SCREEN GUI (LOGON VE MENÜN AYNI)
+-- SCREEN GUI (LOGON VE MENÜN DEĞİŞMEZ)
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V51_STABLE"
+gui.Name = "GREENHUB_V52_PERMANENT"
 
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
@@ -38,7 +38,6 @@ menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 10)
 Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 255, 0)
 
--- Başlıklar
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 40)
 title.Position = UDim2.new(0, 0, 0, 15)
@@ -99,18 +98,19 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- SIFIR KASMA / MAXIMUM KORUMA SİSTEMİ
+-- MASTER CORE PERMANENT SYSTEM
 --------------------------------------------------
 
-local ghostBlock = Instance.new("Part")
-ghostBlock.Size = Vector3.new(2.2, 3.2, 1.2)
-ghostBlock.Color = Color3.fromRGB(0, 255, 0)
-ghostBlock.Material = Enum.Material.ForceField
-ghostBlock.Transparency = 0.5
-ghostBlock.CanCollide = false
-ghostBlock.CanTouch = false
+local ghostPart = Instance.new("Part")
+ghostPart.Name = "GreenShieldForever"
+ghostPart.Size = Vector3.new(2.1, 3.1, 1.1)
+ghostPart.Material = Enum.Material.ForceField
+ghostPart.Color = Color3.fromRGB(0, 255, 0)
+ghostPart.Transparency = 0.5
+ghostPart.CanCollide = false
+ghostPart.CanTouch = false
 
--- E TUŞU: 5 SANİYE GÜÇLÜ LAG
+-- E Tuşu 5 Saniye Lag
 UIS.InputBegan:Connect(function(input, gpe)
     if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
         e_active = true
@@ -119,78 +119,66 @@ UIS.InputBegan:Connect(function(input, gpe)
     end
 end)
 
--- EKRENI TEMİZ TUTMA (DÜŞÜK FPS ENGELLEME)
-task.spawn(function()
-    while task.wait(0.5) do
-        local cc = Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
-        if cc then cc.Saturation = 0 end
-    end
-end)
-
+-- Siyah Beyaz Engelleyici (Stabil)
 RunService.Heartbeat:Connect(function()
+    local cc = Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
+    if cc then cc.Saturation = 0 end
+
     local char = player.Character
     if not char then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
     local hum = char:FindFirstChildOfClass("Humanoid")
-    if not hrp or not hum then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hum or not hrp then return end
 
-    -- 1. EFSANE LEGACY HIZ (Sadece Tuşa Bağlı)
+    -- 1. LEGACY HYPER SPEED (SADECE TUŞA BAĞLI)
     if hyperActive and hum.MoveDirection.Magnitude > 0 then
         hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
     end
 
-    -- 2. ANTI-ATTACK SİSTEMİ
+    -- 2. PERMANENT ANTI-ATTACK
     if antiAttackActive then
-        -- Senin Kodun (Tanrı Modu)
+        -- Anti-Die Ultra Upgrade
         hum.MaxHealth = math.huge
         hum.Health = math.huge
         hum.BreakJointsOnDeath = false
         hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
 
-        -- Havalı Neon Yeşil Görünüm
-        ghostBlock.Parent = char
-        ghostBlock.CFrame = hrp.CFrame
-        
-        -- Kasmaması için döngüyü optimize ettik
+        -- Görsel & Hayalet Modu
+        ghostPart.Parent = char
+        ghostPart.CFrame = hrp.CFrame
         for _, p in pairs(char:GetChildren()) do
             if p:IsA("BasePart") then
                 p.CanCollide = false
                 p.Transparency = 0.7
-                p.Material = Enum.Material.ForceField
+                p.Color = Color3.fromRGB(0, 255, 50)
             end
         end
 
-        -- LAG SİSTEMİ (E-AKTİF 5 SN)
-        for _, enemy in pairs(Players:GetPlayers()) do
-            if enemy ~= player and enemy.Character and enemy.Character:FindFirstChild("HumanoidRootPart") then
-                local eHrp = enemy.Character.HumanoidRootPart
-                local dist = (hrp.Position - eHrp.Position).Magnitude
-                
-                if dist < 20 then
-                    if e_active then
-                        eHrp.CFrame = eHrp.CFrame * CFrame.Angles(0, math.rad(120), 0)
-                    else
-                        -- Pasif lagı hafiflettik ki FPS düşmesin
-                        eHrp.CFrame = eHrp.CFrame * CFrame.Angles(0, math.rad(15), 0)
-                    end
+        -- Kasırga Lag Sistemi (Sadece Rakiplere)
+        for _, other in pairs(Players:GetPlayers()) do
+            if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
+                local oHrp = other.Character.HumanoidRootPart
+                if (hrp.Position - oHrp.Position).Magnitude < 25 then
+                    local rot = e_active and 120 or 30
+                    oHrp.CFrame = oHrp.CFrame * CFrame.Angles(0, math.rad(rot), 0)
+                    if e_active then oHrp.Velocity = Vector3.new(0, -500, 0) end
                 end
             end
         end
     else
-        ghostBlock.Parent = nil
+        ghostPart.Parent = nil
     end
 end)
 
--- 80X CAN POMPASI
-for i = 1, 80 do
-    task.spawn(function()
-        while true do
-            if antiAttackActive and player.Character then
-                local h = player.Character:FindFirstChildOfClass("Humanoid")
-                if h then h.Health = 100 end
-            end
-            task.wait(0.1) -- Ufak bir bekleme ekledik ki işlemciyi yormasın
+-- 80X MEGA REGEN (YENİLENEN KARAKTERE ODAKLI)
+task.spawn(function()
+    while true do
+        if antiAttackActive then
+            pcall(function()
+                player.Character.Humanoid.Health = player.Character.Humanoid.MaxHealth
+            end)
         end
-    end)
-end
+        task.wait()
+    end
+end)
