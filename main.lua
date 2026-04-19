@@ -8,14 +8,14 @@ local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local hyperActive = false
 local antiAttackActive = false 
-local hyperMultiplier = 2.1 -- Eski hız çarpanına geri çekildi
+local hyperMultiplier = 2.1
 
 -- SCREEN GUI
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V38_LEGACY"
+gui.Name = "GREENHUB_V39_APEX"
 
 --------------------------------------------------
--- SİNEMATİK LOGO & DRAG
+-- SİNEMATİK LOGO & MENÜ TASARIMI
 --------------------------------------------------
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
@@ -39,7 +39,6 @@ menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 10)
 Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 255, 0)
 
--- Başlıklar
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 40)
 title.Position = UDim2.new(0, 0, 0, 15)
@@ -58,7 +57,6 @@ sub.TextColor3 = Color3.fromRGB(0, 120, 0)
 sub.Font = Enum.Font.GothamBlack
 sub.TextSize = 15
 
--- Glow & Toggle
 btn.Activated:Connect(function()
     menu.Visible = not menu.Visible
     local isVis = menu.Visible
@@ -66,15 +64,11 @@ btn.Activated:Connect(function()
     TweenService:Create(btnStroke, TweenInfo.new(0.6), {Color = isVis and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 40, 0), Thickness = isVis and 4 or 2.5}):Play()
 end)
 
--- Dragging
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = input.Position startPos = btn.Position end end)
 UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then local delta = input.Position - dragStart btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 70) end end)
 UIS.InputEnded:Connect(function(input) dragging = false end)
 
---------------------------------------------------
--- BUTTONS (BÜYÜK YAZILI)
---------------------------------------------------
 local scroll = Instance.new("ScrollingFrame", menu)
 scroll.Size = UDim2.new(1, -20, 1, -120)
 scroll.Position = UDim2.new(0, 10, 0, 95)
@@ -104,25 +98,22 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- LOGIC (E-FREEZE & LEGACY SPEED)
+-- PROTOCOL: ABSOLUTE ZERO (UPGRADED)
 --------------------------------------------------
 
--- E TUŞU: 17 SANİYE MUTLAK DONMA
 UIS.InputBegan:Connect(function(input, gpe)
     if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
         for _, v in pairs(Players:GetPlayers()) do
             if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
                 local vHrp = v.Character.HumanoidRootPart
-                if (player.Character.HumanoidRootPart.Position - vHrp.Position).Magnitude < 25 then
+                if (player.Character.HumanoidRootPart.Position - vHrp.Position).Magnitude < 30 then
                     task.spawn(function()
                         local startTime = tick()
-                        local originalCF = vHrp.CFrame
                         while tick() - startTime < 17 do
                             if vHrp then
                                 vHrp.Anchored = true
-                                vHrp.CFrame = originalCF * CFrame.Angles(0, math.rad((tick() - startTime) * 3500), 0) 
-                                            * CFrame.new(math.random(-1,1), math.random(-1,1), math.random(-1,1))
-                                vHrp.Velocity = Vector3.new(99999, 99999, 99999)
+                                vHrp.CFrame = vHrp.CFrame * CFrame.Angles(0, math.rad(50), 0)
+                                vHrp.Velocity = Vector3.new(0, 999999, 0)
                             end
                             RunService.Heartbeat:Wait()
                         end
@@ -134,15 +125,26 @@ UIS.InputBegan:Connect(function(input, gpe)
     end
 end)
 
+--------------------------------------------------
+-- MAIN LOOP (SPEED & ANTI-ATTACK INDEPENDENT)
+--------------------------------------------------
+
 RunService.RenderStepped:Connect(function()
     local char = player.Character
     if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart")
     local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hrp or not hum then return end
 
-    if antiAttackActive and hrp and hum then
-        -- YEŞİL ZIRH
-        for _, p in pairs(char:GetChildren()) do
+    -- 1. HIZ SİSTEMİ (ARTIK BAĞIMSIZ)
+    if hyperActive and hum.MoveDirection.Magnitude > 0 then
+        hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
+    end
+
+    -- 2. KORUMA SİSTEMİ (UPGRADED)
+    if antiAttackActive then
+        -- YEŞİL EMERALD ZIRH (GECİKMESİZ)
+        for _, p in pairs(char:GetDescendants()) do
             if p:IsA("BasePart") then
                 p.CanTouch = false
                 p.CanQuery = false
@@ -152,33 +154,32 @@ RunService.RenderStepped:Connect(function()
             end
         end
 
-        -- 25M KORUMA
+        -- 30M AGRESİF LAG & DÖNME
         for _, enemy in pairs(Players:GetPlayers()) do
             if enemy ~= player and enemy.Character and enemy.Character:FindFirstChild("HumanoidRootPart") then
                 local eHrp = enemy.Character.HumanoidRootPart
-                if (hrp.Position - eHrp.Position).Magnitude < 25 then
-                    eHrp.Velocity = Vector3.new(0, -5000, 0)
-                    eHrp.CFrame = eHrp.CFrame * CFrame.Angles(0, math.rad(45), 0)
+                local dist = (hrp.Position - eHrp.Position).Magnitude
+                if dist < 30 then
+                    eHrp.Velocity = Vector3.new(math.random(-1000,1000), -5000, math.random(-1000,1000))
+                    eHrp.CFrame = eHrp.CFrame * CFrame.Angles(0, math.rad(25), 0)
                 end
             end
         end
-        if hum.Health < 100 then hum.Health = 100 end
-    end
 
-    -- LEGACY SPEED SYSTEM (ESKİ HIZIN TIPATIP AYNISI)
-    if hyperActive and hum and hum.MoveDirection.Magnitude > 0 then
-        hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
+        if hum.Health < 100 then hum.Health = 100 end
     end
 end)
 
--- 50X MEGA REGEN
+-- 50X MEGA REGEN (HER KOŞULDA ÇALIŞIR)
 for i = 1, 50 do
     task.spawn(function()
         while true do
-            if antiAttackActive and player.Character then
-                local h = player.Character:FindFirstChildOfClass("Humanoid")
-                if h then h.Health = 100 end
-            end
+            pcall(function()
+                if antiAttackActive and player.Character then
+                    local h = player.Character:FindFirstChildOfClass("Humanoid")
+                    if h then h.Health = 100 end
+                end
+            end)
             task.wait()
         end
     end)
