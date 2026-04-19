@@ -10,11 +10,11 @@ local player = Players.LocalPlayer
 local hyperActive = false
 local antiAttackActive = false 
 local e_active = false
-local hyperMultiplier = 2.1 -- SENİN EFSANE HIZIN
+local hyperMultiplier = 2.1
 
 -- SCREEN GUI (LOGON VE MENÜN TIPA TIP AYNI)
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V48_LEGACY"
+gui.Name = "GREENHUB_V49_FIXED"
 
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
@@ -63,6 +63,7 @@ btn.Activated:Connect(function()
     TweenService:Create(btnStroke, TweenInfo.new(0.6), {Color = isVis and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 40, 0), Thickness = isVis and 4 or 2.5}):Play()
 end)
 
+-- SÜRÜKLEME SİSTEMİ
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = input.Position startPos = btn.Position end end)
 UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then local delta = input.Position - dragStart btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 70) end end)
@@ -97,16 +98,17 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- MASTER SYSTEM V48
+-- KASMAYAN MASTER SİSTEM (FIXED)
 --------------------------------------------------
 
-local ghostBlock = Instance.new("Part")
-ghostBlock.Size = Vector3.new(2.1, 3.1, 1.1)
-ghostBlock.Color = Color3.fromRGB(0, 255, 0) -- Neon Yeşil
-ghostBlock.Material = Enum.Material.ForceField
-ghostBlock.Transparency = 0.5 -- Havalı saydamlık
-ghostBlock.CanCollide = false
-ghostBlock.CanTouch = false
+local ghostPart = Instance.new("Part")
+ghostPart.Name = "GreenShield"
+ghostPart.Size = Vector3.new(2.1, 3.1, 1.1)
+ghostPart.Material = Enum.Material.ForceField
+ghostPart.Color = Color3.fromRGB(0, 255, 0)
+ghostPart.Transparency = 0.5
+ghostPart.CanCollide = false
+ghostPart.CanTouch = false
 
 UIS.InputBegan:Connect(function(input, gpe)
     if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
@@ -116,11 +118,9 @@ UIS.InputBegan:Connect(function(input, gpe)
     end
 end)
 
-RunService.RenderStepped:Connect(function()
-    -- Siyah beyaz ekran engelleyici
-    for _, effect in pairs(Lighting:GetChildren()) do
-        if effect:IsA("ColorCorrectionEffect") then effect.Saturation = 0 end
-    end
+RunService.Heartbeat:Connect(function()
+    -- Siyah-Beyaz Ekran Engelleyici
+    Lighting.ColorCorrection.Saturation = 0
 
     local char = player.Character
     if not char then return end
@@ -128,55 +128,51 @@ RunService.RenderStepped:Connect(function()
     local hum = char:FindFirstChildOfClass("Humanoid")
     if not hrp or not hum then return end
 
-    -- 1. LEGACY HYPER SPEED (SADECE TUŞA BAĞLI)
+    -- 1. LEGACY SPEED
     if hyperActive and hum.MoveDirection.Magnitude > 0 then
         hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
     end
 
-    -- 2. HAVALI GHOST GÖRÜNÜM VE ANTI-ATTACK
+    -- 2. ANTI-ATTACK (HAVALI YEŞİL & ÖLÜMSÜZLÜK)
     if antiAttackActive then
-        -- Prompt Bypass
-        for _, obj in pairs(workspace:GetDescendants()) do
-            if obj:IsA("ProximityPrompt") and (obj.ObjectText == "Hayatta Kalan" or obj.ActionText == "Öldür") then
-                obj.Enabled = false
-            end
-        end
-
-        -- Senin Ölümsüzlük Kodun
+        -- Senin Kodun (Bypass)
         hum.MaxHealth = math.huge
         hum.Health = math.huge
         hum.BreakJointsOnDeath = false
         hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
 
-        -- HAVALI YEŞİL SAYDAMLIK (VÜCUT PARLAMA)
-        ghostBlock.Parent = char
-        ghostBlock.CFrame = hrp.CFrame
+        -- Havalı Görünüm (Kasmayan Tip)
+        ghostPart.Parent = char
+        ghostPart.CFrame = hrp.CFrame
         for _, p in pairs(char:GetChildren()) do
             if p:IsA("BasePart") then
                 p.CanCollide = false
+                p.Color = Color3.fromRGB(0, 255, 100)
                 p.Transparency = 0.7
-                p.Color = Color3.fromRGB(0, 255, 50) -- Parlak Yeşil
-                p.Material = Enum.Material.ForceField -- Havalı Katman
             end
         end
 
-        -- LAG SİSTEMİ
+        -- LAG & DÖNME (SADECE RAKİPLERE)
         for _, enemy in pairs(Players:GetPlayers()) do
+            -- KENDİMİZİ KONTROL EDİYORUZ (DONMA OLMAMASI İÇİN)
             if enemy ~= player and enemy.Character and enemy.Character:FindFirstChild("HumanoidRootPart") then
                 local eHrp = enemy.Character.HumanoidRootPart
-                if (hrp.Position - eHrp.Position).Magnitude < 25 then
-                    local lag = e_active and 110 or 45
-                    eHrp.CFrame = eHrp.CFrame * CFrame.Angles(0, math.rad(lag), 0)
+                local dist = (hrp.Position - eHrp.Position).Magnitude
+                
+                if dist < 25 then
+                    local rotation = e_active and 110 or 45
+                    eHrp.CFrame = eHrp.CFrame * CFrame.Angles(0, math.rad(rotation), 0)
+                    eHrp.Velocity = Vector3.new(0, -1000, 0)
                 end
             end
         end
     else
-        ghostBlock.Parent = nil
+        ghostPart.Parent = nil
     end
 end)
 
--- 80X REGEN
+-- 80X MEGA REGEN
 for i = 1, 80 do
     task.spawn(function()
         while true do
