@@ -8,11 +8,12 @@ local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local hyperActive = false
 local antiAttackActive = false 
-local hyperMultiplier = 2.1 -- Senin o sevdiğin Legacy Speed çarpanı
+local e_active = false
+local hyperMultiplier = 2.1
 
--- SCREEN GUI (MENÜ TASARIMI TIPA TIP AYNI)
+-- SCREEN GUI (LOGON VE MENÜN TIPA TIP AYNI)
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V42_MASTER"
+gui.Name = "GREENHUB_V45_PHANTOM"
 
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
@@ -54,7 +55,6 @@ sub.TextColor3 = Color3.fromRGB(0, 120, 0)
 sub.Font = Enum.Font.GothamBlack
 sub.TextSize = 15
 
--- Menü Açılış Efekti
 btn.Activated:Connect(function()
     menu.Visible = not menu.Visible
     local isVis = menu.Visible
@@ -62,7 +62,6 @@ btn.Activated:Connect(function()
     TweenService:Create(btnStroke, TweenInfo.new(0.6), {Color = isVis and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 40, 0), Thickness = isVis and 4 or 2.5}):Play()
 end)
 
--- Sürükleme
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = input.Position startPos = btn.Position end end)
 UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then local delta = input.Position - dragStart btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 70) end end)
@@ -97,32 +96,22 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- ESKİ SİSTEMLERİN KARIŞIMI (BEST LAG & FREEZE)
+-- GHOST SYSTEM & AGGRESSIVE LAG
 --------------------------------------------------
 
--- E TUŞU: 17 SANİYE BOYUNCA ESKİ USUL LAG + 360 SPIN
+local ghostBlock = Instance.new("Part")
+ghostBlock.Size = Vector3.new(2.2, 3.2, 1.2)
+ghostBlock.Color = Color3.fromRGB(0, 255, 0)
+ghostBlock.Material = Enum.Material.ForceField
+ghostBlock.Transparency = 0.7
+ghostBlock.CanCollide = false
+ghostBlock.CanTouch = false
+
 UIS.InputBegan:Connect(function(input, gpe)
     if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
-        for _, v in pairs(Players:GetPlayers()) do
-            if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-                local vHrp = v.Character.HumanoidRootPart
-                if (player.Character.HumanoidRootPart.Position - vHrp.Position).Magnitude < 30 then
-                    task.spawn(function()
-                        local start = tick()
-                        while tick() - start < 17 do
-                            if vHrp then
-                                -- ESKİ ÇALIŞAN METOD: ANCHOR + SPIN + VELOCITY BOMB
-                                vHrp.Anchored = true
-                                vHrp.CFrame = vHrp.CFrame * CFrame.Angles(0, math.rad(60), 0)
-                                vHrp.Velocity = Vector3.new(math.random(-500,500), 1000, math.random(-500,500))
-                            end
-                            RunService.Heartbeat:Wait()
-                        end
-                        if vHrp then vHrp.Anchored = false end
-                    end)
-                end
-            end
-        end
+        e_active = true
+        task.wait(3) -- Tam 3 saniye Full+10 Lag
+        e_active = false
     end
 end)
 
@@ -131,54 +120,62 @@ RunService.RenderStepped:Connect(function()
     if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart")
     local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hrp or not hum then return end
 
-    -- 1. LEGACY SPEED (FLY HATASI VERMEYEN TİP)
-    if hyperActive and hrp and hum and hum.MoveDirection.Magnitude > 0 then
+    -- LEGACY SPEED
+    if hyperActive and hum.MoveDirection.Magnitude > 0 then
         hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
-        -- Fly hatasını engellemek için yer çekimiyle senkronize et
         hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
     end
 
-    -- 2. MASTER ANTI-ATTACK (VÜCUT SABİTLEME)
-    if antiAttackActive and hrp and hum then
-        -- Kalkan geride kalmasın diye vücut parçalarını direkt modifiye et
-        for _, p in pairs(char:GetChildren()) do
+    if antiAttackActive then
+        -- SENİN KODUN (IMMORTAL CORE)
+        hum.MaxHealth = math.huge
+        hum.Health = math.huge
+        hum.BreakJointsOnDeath = false
+        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+
+        -- GHOST BLOCK & HAVALI GÖRÜNÜM
+        ghostBlock.Parent = char
+        ghostBlock.CFrame = hrp.CFrame
+        for _, p in pairs(char:GetDescendants()) do
             if p:IsA("BasePart") then
-                p.Color = Color3.fromRGB(0, 255, 50)
-                p.Material = Enum.Material.ForceField
-                p.Transparency = 0.5
-                p.CanTouch = false
+                p.CanCollide = false
+                if p ~= ghostBlock then
+                    p.Transparency = 0.7
+                    p.Color = Color3.fromRGB(0, 255, 0)
+                    p.Material = Enum.Material.ForceField
+                end
             end
         end
 
-        -- ESKİ ÇEVRESEL LAG (YAKLAŞANI DÖNDÜR VE İT)
+        -- LAG SİSTEMİ (PASİF & E-AKTİF)
         for _, enemy in pairs(Players:GetPlayers()) do
             if enemy ~= player and enemy.Character and enemy.Character:FindFirstChild("HumanoidRootPart") then
                 local eHrp = enemy.Character.HumanoidRootPart
                 local dist = (hrp.Position - eHrp.Position).Magnitude
                 if dist < 25 then
-                    -- Tıpatıp eski lag sistemi
-                    eHrp.Velocity = Vector3.new(0, -3000, 0) 
-                    eHrp.CFrame = eHrp.CFrame * CFrame.Angles(0, math.rad(30), 0)
+                    local lagIntensity = e_active and 120 or 45 -- E basınca 120, basmayınca 45 derece dönme
+                    eHrp.CFrame = eHrp.CFrame * CFrame.Angles(0, math.rad(lagIntensity), 0)
+                    eHrp.Velocity = Vector3.new(0, -5000, 0)
+                    if e_active then
+                        eHrp.CFrame = eHrp.CFrame * CFrame.new(math.random(-2,2), 0, math.random(-2,2))
+                    end
                 end
             end
         end
-
-        -- Ölümsüzlük (Lobby ışınlamasına karşı bypass)
-        if hum.Health < 100 then hum.Health = 100 end
+    else
+        ghostBlock.Parent = nil
     end
 end)
 
--- 80X REGEN (Saniyede binlerce can, en agresif seviye)
+-- 80X MEGA REGEN LAYER (CAN POMPALAMA)
 for i = 1, 80 do
     task.spawn(function()
         while true do
             if antiAttackActive and player.Character then
                 local h = player.Character:FindFirstChildOfClass("Humanoid")
-                if h then 
-                    h.Health = 100 
-                    h:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-                end
+                if h then h.Health = 100 end
             end
             task.wait()
         end
