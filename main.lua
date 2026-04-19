@@ -12,9 +12,9 @@ local antiAttackActive = false
 local e_active = false
 local hyperMultiplier = 2.1
 
--- SCREEN GUI (LOGON, MENÜ VE TUŞLARIN AYNI)
+-- SCREEN GUI (LOGON, MENÜ VE TUŞLAR TİPATIP AYNI)
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V54_FREEZE"
+gui.Name = "GREENHUB_V55_PHANTOM"
 
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
@@ -38,7 +38,6 @@ menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 10)
 Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 255, 0)
 
--- Menü Başlıkları
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 40)
 title.Position = UDim2.new(0, 0, 0, 15)
@@ -64,7 +63,6 @@ btn.Activated:Connect(function()
     TweenService:Create(btnStroke, TweenInfo.new(0.6), {Color = isVis and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 40, 0), Thickness = isVis and 4 or 2.5}):Play()
 end)
 
--- Sürükleme Sistemi
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = input.Position startPos = btn.Position end end)
 UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then local delta = input.Position - dragStart btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 70) end end)
@@ -99,19 +97,18 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- MASTER NEON FREEZE SYSTEM (V54)
+-- MASTER CORE (ALL POWERS IN ONE NEON BLOCK)
 --------------------------------------------------
 
-local neonCore = Instance.new("Part")
-neonCore.Name = "NeonPhantomHeart"
-neonCore.Size = Vector3.new(2.4, 3.4, 1.4)
-neonCore.Material = Enum.Material.ForceField
-neonCore.Color = Color3.fromRGB(0, 255, 0)
-neonCore.Transparency = 0.3
-neonCore.CanCollide = false
-neonCore.CanTouch = false
+local singleNeonBlock = Instance.new("Part")
+singleNeonBlock.Name = "TheOneAndOnlyCore"
+singleNeonBlock.Size = Vector3.new(2.6, 3.6, 1.6)
+singleNeonBlock.Material = Enum.Material.ForceField
+singleNeonBlock.Color = Color3.fromRGB(0, 255, 0)
+singleNeonBlock.Transparency = 0.3
+singleNeonBlock.CanCollide = false
+singleNeonBlock.CanTouch = false
 
--- E TUŞU: 5 SANİYE DONDURUCU KASIRGA
 UIS.InputBegan:Connect(function(input, gpe)
     if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
         e_active = true
@@ -135,17 +132,17 @@ RunService.Heartbeat:Connect(function()
         hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
     end
 
-    -- 2. ANTI-ATTACK & FREEZE
+    -- 2. FULL UPGRADE ANTI-ATTACK
     if antiAttackActive then
-        -- Ultra Ölümsüzlük
         hum.MaxHealth = math.huge
         hum.Health = math.huge
         hum.BreakJointsOnDeath = false
         hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
 
-        -- Neon Blok & Havalı Görünüm
-        neonCore.Parent = char
-        neonCore.CFrame = hrp.CFrame
+        -- TEK NEON BLOK (TÜM GÜÇ BURADA)
+        singleNeonBlock.Parent = char
+        singleNeonBlock.CFrame = hrp.CFrame
+        
         for _, p in pairs(char:GetChildren()) do
             if p:IsA("BasePart") then
                 p.CanCollide = false
@@ -155,37 +152,41 @@ RunService.Heartbeat:Connect(function()
             end
         end
 
-        -- RAKİPLERİ DONDURAN KASIRGA SİSTEMİ
+        -- E TUŞU: LAG + KASIRGA + GERİ İTME + DONMA
         for _, other in pairs(Players:GetPlayers()) do
             if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
                 local oHrp = other.Character.HumanoidRootPart
                 local oHum = other.Character:FindFirstChildOfClass("Humanoid")
+                local dist = (hrp.Position - oHrp.Position).Magnitude
                 
-                if (hrp.Position - oHrp.Position).Magnitude < 25 then
+                if dist < 25 then
                     if e_active then
-                        -- E AKTİF: 5 Saniye Hareket Edemezler ve Dönerler
-                        oHrp.CFrame = oHrp.CFrame * CFrame.Angles(0, math.rad(110), 0)
-                        oHrp.Velocity = Vector3.new(0,0,0) -- İvmeyi sıfırla
-                        if oHum then oHum.WalkSpeed = 0 end -- Yürüyemezler
+                        -- FULL DOOM MOD (5 SN)
+                        oHrp.CFrame = oHrp.CFrame * CFrame.new(0, 0, 1.5) -- Geri geri itme
+                        oHrp.CFrame = oHrp.CFrame * CFrame.Angles(0, math.rad(115), 0) -- Kasırga
+                        oHrp.Velocity = Vector3.new(math.random(-10,10), -50, math.random(-10,10)) -- Lag efekti
+                        if oHum then oHum.WalkSpeed = 0 end
                     else
-                        -- Pasif: Hafif Lag, Hareket Serbest
-                        oHrp.CFrame = oHrp.CFrame * CFrame.Angles(0, math.rad(25), 0)
+                        -- PASİF MOD
                         if oHum then oHum.WalkSpeed = 16 end
+                        oHrp.CFrame = oHrp.CFrame * CFrame.Angles(0, math.rad(20), 0)
                     end
                 end
             end
         end
     else
-        neonCore.Parent = nil
+        singleNeonBlock.Parent = nil
     end
 end)
 
--- MEGA REGEN
-task.spawn(function()
-    while true do
-        if antiAttackActive then
-            pcall(function() player.Character.Humanoid.Health = math.huge end)
+-- 80 KATMANLI ÖLÜMSÜZLÜK MÜHRÜ
+for i = 1, 80 do
+    task.spawn(function()
+        while true do
+            if antiAttackActive then
+                pcall(function() player.Character.Humanoid.Health = math.huge end)
+            end
+            task.wait()
         end
-        task.wait(0.1)
-    end
-end)
+    end)
+end
