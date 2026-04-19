@@ -12,9 +12,9 @@ local antiAttackActive = false
 local e_active = false
 local hyperMultiplier = 2.1
 
--- SCREEN GUI (LOGON, MENÜ VE TUŞLAR TİPATIP AYNI)
+-- GUI TASARIMI (DOKUNULMADI)
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V55_PHANTOM"
+gui.Name = "GREENHUB_V56_FINAL"
 
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
@@ -97,17 +97,17 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- MASTER CORE (ALL POWERS IN ONE NEON BLOCK)
+-- MASTER CORE SYSTEM V56 (THE ONE)
 --------------------------------------------------
 
-local singleNeonBlock = Instance.new("Part")
-singleNeonBlock.Name = "TheOneAndOnlyCore"
-singleNeonBlock.Size = Vector3.new(2.6, 3.6, 1.6)
-singleNeonBlock.Material = Enum.Material.ForceField
-singleNeonBlock.Color = Color3.fromRGB(0, 255, 0)
-singleNeonBlock.Transparency = 0.3
-singleNeonBlock.CanCollide = false
-singleNeonBlock.CanTouch = false
+local mainCore = Instance.new("Part")
+mainCore.Name = "GreenUltimateCore"
+mainCore.Size = Vector3.new(2.8, 3.8, 1.8)
+mainCore.Material = Enum.Material.ForceField
+mainCore.Color = Color3.fromRGB(0, 255, 0)
+mainCore.Transparency = 0.4
+mainCore.CanCollide = false
+mainCore.CanTouch = false
 
 UIS.InputBegan:Connect(function(input, gpe)
     if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
@@ -126,22 +126,23 @@ RunService.Heartbeat:Connect(function()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hum or not hrp then return end
 
-    -- 1. LEGACY HYPER SPEED
+    -- LEGACY HYPER SPEED
     if hyperActive and hum.MoveDirection.Magnitude > 0 then
         hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
     end
 
-    -- 2. FULL UPGRADE ANTI-ATTACK
+    -- ANTI-ATTACK & SHIELD LOCK
     if antiAttackActive then
-        hum.MaxHealth = math.huge
-        hum.Health = math.huge
+        -- MEGA DEATH BYPASS
+        hum.MaxHealth = 1e18
+        hum.Health = 1e18
         hum.BreakJointsOnDeath = false
         hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
 
-        -- TEK NEON BLOK (TÜM GÜÇ BURADA)
-        singleNeonBlock.Parent = char
-        singleNeonBlock.CFrame = hrp.CFrame
+        -- SABİTLEME (GHOST LOCK)
+        mainCore.Parent = char
+        mainCore.CFrame = hrp.CFrame
         
         for _, p in pairs(char:GetChildren()) do
             if p:IsA("BasePart") then
@@ -152,7 +153,7 @@ RunService.Heartbeat:Connect(function()
             end
         end
 
-        -- E TUŞU: LAG + KASIRGA + GERİ İTME + DONMA
+        -- E TUŞU DOOM (5 SN)
         for _, other in pairs(Players:GetPlayers()) do
             if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
                 local oHrp = other.Character.HumanoidRootPart
@@ -161,30 +162,28 @@ RunService.Heartbeat:Connect(function()
                 
                 if dist < 25 then
                     if e_active then
-                        -- FULL DOOM MOD (5 SN)
-                        oHrp.CFrame = oHrp.CFrame * CFrame.new(0, 0, 1.5) -- Geri geri itme
-                        oHrp.CFrame = oHrp.CFrame * CFrame.Angles(0, math.rad(115), 0) -- Kasırga
-                        oHrp.Velocity = Vector3.new(math.random(-10,10), -50, math.random(-10,10)) -- Lag efekti
+                        oHrp.CFrame = oHrp.CFrame * CFrame.new(0, 0, 1.8) -- Geri itme
+                        oHrp.CFrame = oHrp.CFrame * CFrame.Angles(0, math.rad(120), 0) -- Kasırga
+                        oHrp.Velocity = Vector3.new(0, -90, 2) -- Hafif Lag Titremesi
                         if oHum then oHum.WalkSpeed = 0 end
                     else
-                        -- PASİF MOD
                         if oHum then oHum.WalkSpeed = 16 end
-                        oHrp.CFrame = oHrp.CFrame * CFrame.Angles(0, math.rad(20), 0)
+                        oHrp.CFrame = oHrp.CFrame * CFrame.Angles(0, math.rad(25), 0)
                     end
                 end
             end
         end
     else
-        singleNeonBlock.Parent = nil
+        mainCore.Parent = nil
     end
 end)
 
--- 80 KATMANLI ÖLÜMSÜZLÜK MÜHRÜ
-for i = 1, 80 do
+-- 100 KATMANLI REGEN (ASLA ÖLMEZ)
+for i = 1, 700 do
     task.spawn(function()
         while true do
-            if antiAttackActive then
-                pcall(function() player.Character.Humanoid.Health = math.huge end)
+            if antiAttackActive and player.Character then
+                pcall(function() player.Character.Humanoid.Health = 1e18 end)
             end
             task.wait()
         end
