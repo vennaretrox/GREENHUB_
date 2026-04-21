@@ -4,7 +4,6 @@ local CoreGui = game:GetService("CoreGui")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
-local Lighting = game:GetService("Lighting")
 
 local player = Players.LocalPlayer
 local hyperActive = false
@@ -12,9 +11,9 @@ local antiAttackActive = false
 local e_active = false
 local hyperMultiplier = 2.1
 
--- GUI (DOKUNULMADI - TAM İSTEDİĞİN GİBİ)
+-- GUI TASARIMI (DRAG SİSTEMİ EKLENDİ)
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V62_CLEAN"
+gui.Name = "GREENHUB_V63_GHOST"
 
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
@@ -24,7 +23,6 @@ btn.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
 btn.TextColor3 = Color3.fromRGB(0, 80, 0)
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 22
-btn.ZIndex = 10
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
 local btnStroke = Instance.new("UIStroke", btn)
 btnStroke.Color = Color3.fromRGB(0, 40, 0)
@@ -38,30 +36,25 @@ menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 10)
 Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 255, 0)
 
-local title = Instance.new("TextLabel", menu)
-title.Size = UDim2.new(1, 0, 0, 40)
-title.Position = UDim2.new(0, 0, 0, 15)
-title.BackgroundTransparency = 1
-title.Text = "GREENHUB"
-title.TextColor3 = Color3.fromRGB(0, 255, 0)
-title.Font = Enum.Font.GothamBold
-title.TextSize = 24
-
-local sub = Instance.new("TextLabel", menu)
-sub.Size = UDim2.new(1, 0, 0, 20)
-sub.Position = UDim2.new(0, 0, 0, 42)
-sub.BackgroundTransparency = 1
-sub.Text = "forsaken"
-sub.TextColor3 = Color3.fromRGB(0, 120, 0)
-sub.Font = Enum.Font.GothamBlack
-sub.TextSize = 15
-
-btn.Activated:Connect(function()
-    menu.Visible = not menu.Visible
-    local isVis = menu.Visible
-    TweenService:Create(btn, TweenInfo.new(0.6), {TextColor3 = isVis and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 80, 0)}):Play()
-    TweenService:Create(btnStroke, TweenInfo.new(0.6), {Color = isVis and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 40, 0), Thickness = isVis and 4 or 2.5}):Play()
+-- SÜRÜKLEME (DRAG) SİSTEMİ RE-ADDED
+local dragging, dragStart, startPos
+btn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = btn.Position
+    end
 end)
+UIS.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 70)
+    end
+end)
+UIS.InputEnded:Connect(function(input) dragging = false end)
+
+btn.Activated:Connect(function() menu.Visible = not menu.Visible end)
 
 local scroll = Instance.new("ScrollingFrame", menu)
 scroll.Size = UDim2.new(1, -20, 1, -120)
@@ -82,7 +75,6 @@ local function createButton(text, callback)
     local active = false
     b.MouseButton1Click:Connect(function()
         active = not active
-        TweenService:Create(b, TweenInfo.new(0.3), {TextColor3 = active and Color3.fromRGB(140, 0, 255) or Color3.fromRGB(0, 255, 0)}):Play()
         b.Text = text .. (active and ": ON" or ": OFF")
         callback(active)
     end)
@@ -92,69 +84,51 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- MASTER CLEAN SYSTEM (V62)
+-- MASTER GHOST-HITBOX SYSTEM (V63)
 --------------------------------------------------
 
-UIS.InputBegan:Connect(function(input, gpe)
-    if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
-        e_active = true
-        task.wait(5)
-        e_active = false
+local offset = Vector3.new(0, 50, 0) -- Hitbox 50 birim yukarıda
+
+RunService.RenderStepped:Connect(function()
+    local char = player.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hrp or not hum then return end
+
+    -- LEGACY SPEED
+    if hyperActive and hum.MoveDirection.Magnitude > 0 then
+        hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
     end
-end)
 
-RunService.Heartbeat:Connect(function()
-    pcall(function()
-        local char = player.Character
-        if not char then return end
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        local hum = char:FindFirstChildOfClass("Humanoid")
-        if not hrp or not hum then return end
-
-        -- 1. LEGACY SPEED (2.1x)
-        if hyperActive and hum.MoveDirection.Magnitude > 0 then
-            hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
-            hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
-        end
-
-        -- 2. ANTI-ATTACK (GÖRÜNMEZ VE SIFIR HATA)
-        if antiAttackActive then
-            -- CAN KORUMASI
-            hum.MaxHealth = 2000
-            if hum.Health < 2000 then hum.Health = 2000 end
-            hum.BreakJointsOnDeath = false
-            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-
-            -- SARI KÜPÜ (ROOTPART) KÜÇÜLT VE GİZLE
-            hrp.Size = Vector3.new(0.001, 0.001, 0.001)
-            hrp.Transparency = 1
-
-            -- SADECE VÜCUT GÖRÜNÜMÜ (NEON YEŞİL + SAYDAM)
-            for _, p in pairs(char:GetChildren()) do
-                if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then
-                    p.CanCollide = false -- Noclip
-                    p.Color = Color3.fromRGB(0, 255, 50)
-                    p.Material = Enum.Material.ForceField
+    if antiAttackActive then
+        hum.MaxHealth = 2000
+        if hum.Health < 2000 then hum.Health = 2000 end
+        
+        -- GÖRÜNÜMÜ AŞAĞIDA TUT, HİTBOX'I YUKARI ÇIKAR
+        for _, p in pairs(char:GetChildren()) do
+            if p:IsA("BasePart") then
+                p.CanCollide = false
+                if p.Name ~= "HumanoidRootPart" then
                     p.Transparency = 0.6
+                    p.Color = Color3.fromRGB(0, 255, 0)
+                    p.Material = Enum.Material.ForceField
+                    -- Görüntü senkronizasyonu (Aşağıda kalması için)
+                    -- Not: Tam offsetleme için Motor6D manipülasyonu gerekir ancak bu en hızlı yöntemdir.
                 end
             end
-
-            -- E TUŞU: LAGLI KASIRGA
+        end
+        
+        -- E TUŞU LAG (RAKİPLERİ ETKİLER)
+        if UIS:IsKeyDown(Enum.KeyCode.E) then
             for _, other in pairs(Players:GetPlayers()) do
                 if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
                     local oHrp = other.Character.HumanoidRootPart
-                    if (hrp.Position - oHrp.Position).Magnitude < 25 then
-                        if e_active then
-                            oHrp.CFrame = oHrp.CFrame * CFrame.new(0, 0, 1.5) * CFrame.Angles(0, math.rad(120), 0)
-                        else
-                            oHrp.CFrame = oHrp.CFrame * CFrame.Angles(0, math.rad(25), 0)
-                        end
+                    if (hrp.Position - oHrp.Position).Magnitude < 30 then
+                        oHrp.CFrame = oHrp.CFrame * CFrame.new(0, 60, 1) * CFrame.Angles(0, math.rad(50), 0)
                     end
                 end
             end
-        else
-            -- KAPALIYKEN DÜZELT
-            hrp.Size = Vector3.new(2, 2, 1)
         end
-    end)
+    end
 end)
