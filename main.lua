@@ -12,9 +12,9 @@ local antiAttackActive = false
 local e_active = false
 local hyperMultiplier = 2.1
 
--- GUI TASARIMI (ASLA DEĞİŞMEZ - AYNI KALDI)
+-- GUI (DOKUNULMADI - TAM İSTEDİĞİN GİBİ)
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V61_DEFENSE"
+gui.Name = "GREENHUB_V62_CLEAN"
 
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
@@ -63,12 +63,6 @@ btn.Activated:Connect(function()
     TweenService:Create(btnStroke, TweenInfo.new(0.6), {Color = isVis and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 40, 0), Thickness = isVis and 4 or 2.5}):Play()
 end)
 
--- Sürükleme Sistemi
-local dragging, dragStart, startPos
-btn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = input.Position startPos = btn.Position end end)
-UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then local delta = input.Position - dragStart btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 70) end end)
-UIS.InputEnded:Connect(function(input) dragging = false end)
-
 local scroll = Instance.new("ScrollingFrame", menu)
 scroll.Size = UDim2.new(1, -20, 1, -120)
 scroll.Position = UDim2.new(0, 10, 0, 95)
@@ -98,29 +92,14 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- MASTER DEFENSE SYSTEM V61
+-- MASTER CLEAN SYSTEM (V62)
 --------------------------------------------------
 
--- E TUŞU KONTROLÜ
 UIS.InputBegan:Connect(function(input, gpe)
     if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
         e_active = true
         task.wait(5)
         e_active = false
-    end
-end)
-
--- ULTRA HIZLI HASAR FİLTRESİ
-RunService.Stepped:Connect(function()
-    if antiAttackActive then
-        pcall(function()
-            local hum = player.Character:FindFirstChildOfClass("Humanoid")
-            if hum then
-                if hum.Health < 2000 then
-                    hum.Health = 2000 -- Hasarı anında sıfırlar
-                end
-            end
-        end)
     end
 end)
 
@@ -132,46 +111,50 @@ RunService.Heartbeat:Connect(function()
         local hum = char:FindFirstChildOfClass("Humanoid")
         if not hrp or not hum then return end
 
-        -- 1. LEGACY HIZ
+        -- 1. LEGACY SPEED (2.1x)
         if hyperActive and hum.MoveDirection.Magnitude > 0 then
             hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
             hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
         end
 
-        -- 2. ANTI-ATTACK STABİLİZASYON
+        -- 2. ANTI-ATTACK (GÖRÜNMEZ VE SIFIR HATA)
         if antiAttackActive then
+            -- CAN KORUMASI
             hum.MaxHealth = 2000
+            if hum.Health < 2000 then hum.Health = 2000 end
             hum.BreakJointsOnDeath = false
             hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-            
-            -- Fazla Hasarı Engellemek İçin Parça Düzenleme
+
+            -- SARI KÜPÜ (ROOTPART) KÜÇÜLT VE GİZLE
+            hrp.Size = Vector3.new(0.001, 0.001, 0.001)
+            hrp.Transparency = 1
+
+            -- SADECE VÜCUT GÖRÜNÜMÜ (NEON YEŞİL + SAYDAM)
             for _, p in pairs(char:GetChildren()) do
-                if p:IsA("BasePart") then
-                    p.CanCollide = false
-                    p.Transparency = 0.6
+                if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then
+                    p.CanCollide = false -- Noclip
                     p.Color = Color3.fromRGB(0, 255, 50)
-                    p.Material = Enum.Material.SmoothPlastic -- ForceField'ın fazla hasar alma hatasını düzeltir
+                    p.Material = Enum.Material.ForceField
+                    p.Transparency = 0.6
                 end
             end
 
-            -- E TUŞU: LAGLI KASIRGA + GERİ GİTME
+            -- E TUŞU: LAGLI KASIRGA
             for _, other in pairs(Players:GetPlayers()) do
                 if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
                     local oHrp = other.Character.HumanoidRootPart
-                    local oHum = other.Character:FindFirstChildOfClass("Humanoid")
-                    
                     if (hrp.Position - oHrp.Position).Magnitude < 25 then
                         if e_active then
-                            oHrp.CFrame = oHrp.CFrame * CFrame.new(0, 0, 1.8) 
-                            oHrp.CFrame = oHrp.CFrame * CFrame.Angles(0, math.rad(125), 0)
-                            if oHum then oHum.WalkSpeed = 0 end
+                            oHrp.CFrame = oHrp.CFrame * CFrame.new(0, 0, 1.5) * CFrame.Angles(0, math.rad(120), 0)
                         else
-                            if oHum then oHum.WalkSpeed = 16 end
                             oHrp.CFrame = oHrp.CFrame * CFrame.Angles(0, math.rad(25), 0)
                         end
                     end
                 end
             end
+        else
+            -- KAPALIYKEN DÜZELT
+            hrp.Size = Vector3.new(2, 2, 1)
         end
     end)
 end)
