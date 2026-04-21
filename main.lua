@@ -11,16 +11,16 @@ local antiAttackActive = false
 local e_active = false
 local hyperMultiplier = 2.1
 
--- [MENÜ VE LOGO - ESKİSİ GİBİ SIFIR HATA]
+-- [TASARIM RESTORASYONU - FULL GHOST V65]
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V64_LEGEND"
+gui.Name = "GREENHUB_V65_FORSAKEN"
 
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
 btn.Position = UDim2.new(0, 50, 0, 50)
 btn.Text = "G H"
 btn.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
-btn.TextColor3 = Color3.fromRGB(0, 80, 0)
+btn.TextColor3 = Color3.fromRGB(0, 255, 0)
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 22
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
@@ -36,22 +36,29 @@ menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 10)
 Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 255, 0)
 
--- DRAG SİSTEMİ (MENÜ SÜRÜKLEME)
+-- BAŞLIKLAR (TAM İSTEDİĞİN GİBİ)
+local title = Instance.new("TextLabel", menu)
+title.Size = UDim2.new(1, 0, 0, 40)
+title.Position = UDim2.new(0, 0, 0, 15)
+title.BackgroundTransparency = 1
+title.Text = "GREENHUB"
+title.TextColor3 = Color3.fromRGB(0, 255, 0)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 24
+
+local sub = Instance.new("TextLabel", menu)
+sub.Size = UDim2.new(1, 0, 0, 20)
+sub.Position = UDim2.new(0, 0, 0, 42)
+sub.BackgroundTransparency = 1
+sub.Text = "forsaken"
+sub.TextColor3 = Color3.fromRGB(0, 120, 0)
+sub.Font = Enum.Font.GothamBlack -- GOTHAMBLACK GERİ GELDİ
+sub.TextSize = 15
+
+-- DRAG SİSTEMİ
 local dragging, dragStart, startPos
-btn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = btn.Position
-    end
-end)
-UIS.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 70)
-    end
-end)
+btn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = input.Position startPos = btn.Position end end)
+UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then local delta = input.Position - dragStart btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 70) end end)
 UIS.InputEnded:Connect(function(input) dragging = false end)
 
 btn.Activated:Connect(function() menu.Visible = not menu.Visible end)
@@ -63,19 +70,23 @@ scroll.BackgroundTransparency = 1
 scroll.ScrollBarThickness = 0
 Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 10)
 
+-- BUTON SİSTEMİ (MOR/YEŞİL RENK AYARI)
 local function createButton(text, callback)
     local b = Instance.new("TextButton", scroll)
     b.Size = UDim2.new(1, 0, 0, 50)
-    b.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    b.TextColor3 = Color3.fromRGB(0, 255, 0)
+    b.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+    b.TextColor3 = Color3.fromRGB(0, 255, 0) -- Başlangıç Yeşil (OFF)
     b.Text = text .. ": OFF"
     b.Font = Enum.Font.GothamBold
     b.TextSize = 16
     Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
+    
     local active = false
     b.MouseButton1Click:Connect(function()
         active = not active
         b.Text = text .. (active and ": ON" or ": OFF")
+        -- ON: Koyu Mor, OFF: Yeşil
+        b.TextColor3 = active and Color3.fromRGB(100, 0, 150) or Color3.fromRGB(0, 255, 0)
         callback(active)
     end)
 end
@@ -84,7 +95,7 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- CORE LOGIC (SPEED & HITBOX DESYNC)
+-- MASTER GHOST CORE (V65)
 --------------------------------------------------
 
 UIS.InputBegan:Connect(function(input, gpe)
@@ -102,18 +113,17 @@ RunService.Heartbeat:Connect(function()
     local hum = char:FindFirstChildOfClass("Humanoid")
     if not hrp or not hum then return end
 
-    -- 1. ESKİ VE GÜÇLÜ HYPER SPEED (2.1x)
+    -- 2.1x SPEED
     if hyperActive and hum.MoveDirection.Magnitude > 0 then
         hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
         hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
     end
 
-    -- 2. YÖNTEM 1: GHOST PROTECTION
+    -- YÖNTEM 1 PROTECTION
     if antiAttackActive then
         hum.MaxHealth = 2000
         if hum.Health < 2000 then hum.Health = 2000 end
         
-        -- Karakteri Saydam Neon Yeşil Yap
         for _, p in pairs(char:GetChildren()) do
             if p:IsA("BasePart") then
                 p.CanCollide = false -- Noclip
@@ -122,12 +132,12 @@ RunService.Heartbeat:Connect(function()
                     p.Color = Color3.fromRGB(0, 255, 50)
                     p.Material = Enum.Material.ForceField
                 else
-                    p.Transparency = 1 -- O Lanet Küp Görünmez!
+                    p.Transparency = 1 -- Gıcık Küp Gizli
                 end
             end
         end
 
-        -- E TUŞU: LAGLI KASIRGA (5 SN)
+        -- E TUŞU: LAGLI KASIRGA
         if e_active then
             for _, other in pairs(Players:GetPlayers()) do
                 if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
