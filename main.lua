@@ -11,9 +11,9 @@ local antiAttackActive = false
 local e_active = false
 local hyperMultiplier = 2.1
 
--- GUI TASARIMI (DRAG SİSTEMİ EKLENDİ)
+-- [MENÜ VE LOGO - ESKİSİ GİBİ SIFIR HATA]
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V63_GHOST"
+gui.Name = "GREENHUB_V64_LEGEND"
 
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
@@ -36,7 +36,7 @@ menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 10)
 Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 255, 0)
 
--- SÜRÜKLEME (DRAG) SİSTEMİ RE-ADDED
+-- DRAG SİSTEMİ (MENÜ SÜRÜKLEME)
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -84,48 +84,56 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Anti-Attack", function(s) antiAttackActive = s end)
 
 --------------------------------------------------
--- MASTER GHOST-HITBOX SYSTEM (V63)
+-- CORE LOGIC (SPEED & HITBOX DESYNC)
 --------------------------------------------------
 
-local offset = Vector3.new(0, 50, 0) -- Hitbox 50 birim yukarıda
+UIS.InputBegan:Connect(function(input, gpe)
+    if not gpe and input.KeyCode == Enum.KeyCode.E and antiAttackActive then
+        e_active = true
+        task.wait(5)
+        e_active = false
+    end
+end)
 
-RunService.RenderStepped:Connect(function()
+RunService.Heartbeat:Connect(function()
     local char = player.Character
     if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart")
     local hum = char:FindFirstChildOfClass("Humanoid")
     if not hrp or not hum then return end
 
-    -- LEGACY SPEED
+    -- 1. ESKİ VE GÜÇLÜ HYPER SPEED (2.1x)
     if hyperActive and hum.MoveDirection.Magnitude > 0 then
         hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
+        hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
     end
 
+    -- 2. YÖNTEM 1: GHOST PROTECTION
     if antiAttackActive then
         hum.MaxHealth = 2000
         if hum.Health < 2000 then hum.Health = 2000 end
         
-        -- GÖRÜNÜMÜ AŞAĞIDA TUT, HİTBOX'I YUKARI ÇIKAR
+        -- Karakteri Saydam Neon Yeşil Yap
         for _, p in pairs(char:GetChildren()) do
             if p:IsA("BasePart") then
-                p.CanCollide = false
+                p.CanCollide = false -- Noclip
                 if p.Name ~= "HumanoidRootPart" then
                     p.Transparency = 0.6
-                    p.Color = Color3.fromRGB(0, 255, 0)
+                    p.Color = Color3.fromRGB(0, 255, 50)
                     p.Material = Enum.Material.ForceField
-                    -- Görüntü senkronizasyonu (Aşağıda kalması için)
-                    -- Not: Tam offsetleme için Motor6D manipülasyonu gerekir ancak bu en hızlı yöntemdir.
+                else
+                    p.Transparency = 1 -- O Lanet Küp Görünmez!
                 end
             end
         end
-        
-        -- E TUŞU LAG (RAKİPLERİ ETKİLER)
-        if UIS:IsKeyDown(Enum.KeyCode.E) then
+
+        -- E TUŞU: LAGLI KASIRGA (5 SN)
+        if e_active then
             for _, other in pairs(Players:GetPlayers()) do
                 if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
                     local oHrp = other.Character.HumanoidRootPart
-                    if (hrp.Position - oHrp.Position).Magnitude < 30 then
-                        oHrp.CFrame = oHrp.CFrame * CFrame.new(0, 60, 1) * CFrame.Angles(0, math.rad(50), 0)
+                    if (hrp.Position - oHrp.Position).Magnitude < 25 then
+                        oHrp.CFrame = oHrp.CFrame * CFrame.new(0, 0, 1.5) * CFrame.Angles(0, math.rad(110), 0)
                     end
                 end
             end
