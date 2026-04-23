@@ -4,16 +4,15 @@ local CoreGui = game:GetService("CoreGui")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
 local hyperActive = false
-local autoGenActive = false
+local instantGenActive = false -- Yeni İsim
 local hyperMultiplier = 2.1
 
--- [FORSAKEN DESIGN - V73]
+-- [FORSAKEN V74 - INSTANT COMPLETION]
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V73_BYPASS"
+gui.Name = "GREENHUB_V74_INSTANT"
 
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
@@ -24,14 +23,13 @@ btn.TextColor3 = Color3.fromRGB(0, 255, 0)
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 22
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
-
 local btnStroke = Instance.new("UIStroke", btn)
 btnStroke.Color = Color3.fromRGB(0, 255, 0)
 btnStroke.Thickness = 2
 btnStroke.Transparency = 1 
 
 local menu = Instance.new("Frame", gui)
-menu.Size = UDim2.fromOffset(250, 350)
+menu.Size = UDim2.new(0, 250, 0, 350)
 menu.Position = UDim2.new(0, 50, 0, 120)
 menu.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
 menu.Visible = false
@@ -41,8 +39,7 @@ Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 255, 0)
 -- SMART GLOW
 btn.Activated:Connect(function()
     menu.Visible = not menu.Visible
-    local info = TweenInfo.new(0.8)
-    TweenService:Create(btnStroke, info, {Transparency = menu.Visible and 0 or 1, Thickness = menu.Visible and 4 or 2}):Play()
+    TweenService:Create(btnStroke, TweenInfo.new(0.8), {Transparency = menu.Visible and 0 or 1}):Play()
 end)
 
 -- BAŞLIKLAR
@@ -59,12 +56,12 @@ local sub = Instance.new("TextLabel", menu)
 sub.Size = UDim2.new(1, 0, 0, 20)
 sub.Position = UDim2.new(0, 0, 0, 42)
 sub.BackgroundTransparency = 1
-sub.Text = "forsaken"
+sub.Text = "forsaken "
 sub.TextColor3 = Color3.fromRGB(0, 120, 0)
 sub.Font = Enum.Font.GothamBlack
-sub.TextSize = 15
+sub.TextSize = 14
 
--- DRAG
+-- DRAG & BUTTONS
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = input.Position startPos = btn.Position end end)
 UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then local delta = input.Position - dragStart btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 70) end end)
@@ -86,62 +83,45 @@ local function createButton(text, callback)
     b.Font = Enum.Font.GothamBold
     b.TextSize = 16
     Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
-    
-    local active = false
     b.MouseButton1Click:Connect(function()
-        active = not active
-        b.Text = text .. (active and ": ON" or ": OFF")
-        b.TextColor3 = active and Color3.fromRGB(130, 0, 200) or Color3.fromRGB(0, 255, 0)
-        callback(active)
+        callback(b)
     end)
 end
 
-createButton("Hyper Speed", function(s) hyperActive = s end)
-createButton("Auto Generator", function(s) autoGenActive = s end)
-
---------------------------------------------------
--- PUZZLE SPOOFER (AUTO BYPASS)
---------------------------------------------------
-
-task.spawn(function()
-    while task.wait(0.1) do
-        if autoGenActive then
-            pcall(function()
-                -- 1. Ekranda Puzzle var mı kontrol et
-                local playerGui = player:WaitForChild("PlayerGui")
-                local puzzleActive = playerGui:FindFirstChild("Puzzle") or playerGui:FindFirstChild("GeneratorUI") -- Oyunun UI adını tahmin eder
-                
-                if puzzleActive then
-                    -- 2. Sunucuya "Ben çözdüm" paketini gönder (Oyunun gizli Remotelarını tarar)
-                    local remotes = ReplicatedStorage:FindFirstChild("Remotes") or ReplicatedStorage
-                    
-                    for _, r in pairs(remotes:GetDescendants()) do
-                        if r:IsA("RemoteEvent") and (r.Name:lower():find("finish") or r.Name:lower():find("solve") or r.Name:lower():find("complete")) then
-                            r:FireServer(true) -- Sunucuyu kandır
-                        end
-                    end
-                    
-                    -- Alternatif: Bazı oyunlar direkt fonksiyon çağrısı ister
-                    local func = remotes:FindFirstChild("PuzzleComplete")
-                    if func and func:IsA("RemoteFunction") then
-                        func:InvokeServer()
-                    end
-                end
-            end)
-        end
-    end
+createButton("Hyper Speed", function(b) 
+    hyperActive = not hyperActive
+    b.Text = "Hyper Speed: " .. (hyperActive and "ON" or "OFF")
+    b.TextColor3 = hyperActive and Color3.fromRGB(130, 0, 200) or Color3.fromRGB(0, 255, 0)
 end)
 
--- SPEED LOOP (2.1x)
+createButton("Instant Gen", function(b)
+    instantGenActive = not instantGenActive
+    b.Text = "Instant Gen: " .. (instantGenActive and "ON" or "OFF")
+    b.TextColor3 = instantGenActive and Color3.fromRGB(130, 0, 200) or Color3.fromRGB(0, 255, 0)
+end)
+
+--------------------------------------------------
+-- BYPASS CORE (SERVER-SIDE TRIGGER)
+--------------------------------------------------
+
 RunService.Heartbeat:Connect(function()
-    pcall(function()
-        local char = player.Character
-        if char and hyperActive then
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            local hum = char:FindFirstChildOfClass("Humanoid")
-            if hrp and hum and hum.MoveDirection.Magnitude > 0 then
-                hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
+    if instantGenActive then
+        -- Forsaken'daki jeneratör eventlerini yakalamak için global tarama
+        for _, remote in pairs(game:GetDescendants()) do
+            if remote:IsA("RemoteEvent") and (remote.Name:lower():find("gen") or remote.Name:lower():find("repair")) then
+                -- Jeneratör eventini tetikle (Başarı Sinyali)
+                remote:FireServer("Complete") 
+                task.wait(1) -- Spam olmasın diye bekle
             end
         end
-    end)
+    end
+
+    if hyperActive then
+        local char = player.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if hrp and hum and hum.MoveDirection.Magnitude > 0 then
+            hrp.CFrame = hrp.CFrame + (hum.MoveDirection * hyperMultiplier)
+        end
+    end
 end)
