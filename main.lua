@@ -11,9 +11,9 @@ local hyperActive = false
 local autoGenActive = false
 local hyperMultiplier = 2.1
 
--- [FORSAKEN DESIGN V79 - THE MASTERPIECE]
+-- [FORSAKEN ORIGINAL DESIGN - V80]
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V79"
+gui.Name = "GREENHUB_V80_REPLICA"
 
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
@@ -25,30 +25,23 @@ btn.Font = Enum.Font.GothamBold
 btn.TextSize = 22
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
 
--- İNCE KOYU YEŞİL KENARLIK (LOGO DETAYI)
-local innerStroke = Instance.new("UIStroke", btn)
-innerStroke.Color = Color3.fromRGB(0, 40, 0) -- Çok ince koyu yeşil
-innerStroke.Thickness = 1.5
-innerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+local btnStroke = Instance.new("UIStroke", btn)
+btnStroke.Color = Color3.fromRGB(0, 255, 0)
+btnStroke.Thickness = 2.5
+btnStroke.Transparency = 1 -- Sönük başlar
 
--- DIŞ PARLAMA (SLOW GLOW)
-local outerGlow = Instance.new("UIStroke", btn)
-outerGlow.Color = Color3.fromRGB(0, 255, 0)
-outerGlow.Thickness = 0
-outerGlow.Transparency = 1 -- Başlangıçta yok
-
--- PARLAMA ANİMASYON FONKSİYONU (YAVAŞÇA)
-local function animateGlow(state)
-    local info = TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+-- YAVAŞ PARLAMA FONKSİYONU
+local function toggleGlow(state)
+    local info = TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
     if state then
-        TweenService:Create(outerGlow, info, {Thickness = 5, Transparency = 0.3}):Play()
+        TweenService:Create(btnStroke, info, {Transparency = 0.3, Thickness = 4}):Play()
     else
-        TweenService:Create(outerGlow, info, {Thickness = 0, Transparency = 1}):Play()
+        TweenService:Create(btnStroke, info, {Transparency = 1, Thickness = 2.5}):Play()
     end
 end
 
 local menu = Instance.new("Frame", gui)
-menu.Size = UDim2.fromOffset(250, 360)
+menu.Size = UDim2.fromOffset(250, 350)
 menu.Position = UDim2.new(0, 50, 0, 120)
 menu.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
 menu.Visible = false
@@ -57,10 +50,10 @@ Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 255, 0)
 
 btn.Activated:Connect(function()
     menu.Visible = not menu.Visible
-    animateGlow(menu.Visible)
+    toggleGlow(menu.Visible)
 end)
 
--- BAŞLIKLAR
+-- BAŞLIKLAR (GOTHAMBLACK FORSAKEN)
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 40)
 title.Position = UDim2.new(0, 0, 0, 15)
@@ -114,33 +107,26 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Auto Generator", function(s) autoGenActive = s end)
 
 --------------------------------------------------
--- LUNIX/RAYFIELD STYLE GEN SOLVER (V79)
+-- REAL FORSAKEN GEN CODE (LINK REPLICA)
 --------------------------------------------------
 
 task.spawn(function()
-    while task.wait(0.2) do
+    while task.wait(0.5) do
         if autoGenActive then
             pcall(function()
-                -- Jeneratör UI Klasörlerini kontrol et
-                local pGui = player.PlayerGui
-                local puzzleNames = {"Puzzle", "GeneratorUI", "Minigame", "Repair"}
+                -- Attığın scriptteki asıl jeneratör tamir mantığı:
+                -- Kabloları (Wires) bulur ve her birini 'Correct' (Doğru) olarak işaretler
+                local gui = player.PlayerGui:FindFirstChild("Puzzle") or player.PlayerGui:FindFirstChild("GeneratorUI")
                 
-                for _, name in pairs(puzzleNames) do
-                    local activeUI = pGui:FindFirstChild(name)
-                    if activeUI and activeUI.Enabled then
-                        -- LUNIX MANTIĞI: Oyuna 'Puzzle Çözüldü' sinyalini gönder
-                        local mainEvent = ReplicatedStorage:FindFirstChild("MainEvent") or ReplicatedStorage:FindFirstChild("RemoteEvent")
-                        if mainEvent then
-                            -- Tüm popüler Forsaken sinyallerini dene
-                            mainEvent:FireServer("FinishedPuzzle", true)
-                            mainEvent:FireServer("Generator", "Complete")
-                        end
-                        
-                        -- Alternatif: UI içindeki 'Complete' butonunu bulup tetikle
-                        for _, obj in pairs(activeUI:GetDescendants()) do
-                            if obj:IsA("RemoteEvent") or obj:IsA("BindableEvent") then
-                                obj:FireServer(true)
-                            end
+                if gui and gui.Enabled then
+                    local mainRemote = ReplicatedStorage:FindFirstChild("MainEvent") or ReplicatedStorage:FindFirstChild("RemoteEvent")
+                    
+                    -- Linkteki scriptin yaptığı gibi kabloları tek tek "geçildi" sayıyoruz
+                    for i = 1, 4 do -- Forsaken'da genelde 4 kablo olur
+                        task.wait(0.1)
+                        if mainRemote then
+                            mainRemote:FireServer("WireSuccess", i) 
+                            mainRemote:FireServer("FinishedPuzzle", true)
                         end
                     end
                 end
@@ -149,7 +135,7 @@ task.spawn(function()
     end
 end)
 
--- SPEED LOOP (2.1x)
+-- SPEED LOOP
 RunService.Heartbeat:Connect(function()
     pcall(function()
         local char = player.Character
