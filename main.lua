@@ -4,16 +4,16 @@ local CoreGui = game:GetService("CoreGui")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
-local VIM = game:GetService("VirtualInputManager") -- Gerçek tıklama servisi
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
 local hyperActive = false
 local autoGenActive = false
 local hyperMultiplier = 2.1
 
--- [FORSAKEN DESIGN - V72]
+-- [FORSAKEN DESIGN - V73]
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V72_SMARTGEN"
+gui.Name = "GREENHUB_V73_BYPASS"
 
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
@@ -38,7 +38,7 @@ menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 10)
 Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 255, 0)
 
--- SMART GLOW (Menü açılınca parlar)
+-- SMART GLOW
 btn.Activated:Connect(function()
     menu.Visible = not menu.Visible
     local info = TweenInfo.new(0.8)
@@ -100,47 +100,31 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Auto Generator", function(s) autoGenActive = s end)
 
 --------------------------------------------------
--- INTELLIGENT COLOR MATCHER (V72)
+-- PUZZLE SPOOFER (AUTO BYPASS)
 --------------------------------------------------
 
-local function virtualClick(obj)
-    local x = obj.AbsolutePosition.X + (obj.AbsoluteSize.X / 2)
-    local y = obj.AbsolutePosition.Y + (obj.AbsoluteSize.Y / 2) + 36 -- Topbar offset
-    VIM:SendMouseButtonEvent(x, y, 0, true, game, 0)
-    task.wait(0.05)
-    VIM:SendMouseButtonEvent(x, y, 0, false, game, 0)
-end
-
 task.spawn(function()
-    while task.wait(0.5) do
+    while task.wait(0.1) do
         if autoGenActive then
             pcall(function()
-                local foundButtons = {}
+                -- 1. Ekranda Puzzle var mı kontrol et
+                local playerGui = player:WaitForChild("PlayerGui")
+                local puzzleActive = playerGui:FindFirstChild("Puzzle") or playerGui:FindFirstChild("GeneratorUI") -- Oyunun UI adını tahmin eder
                 
-                -- Jeneratör UI'sını derinlemesine tara
-                for _, gui in pairs(player.PlayerGui:GetChildren()) do
-                    if gui:IsA("ScreenGui") and gui.Enabled then
-                        for _, btn in pairs(gui:GetDescendants()) do
-                            if (btn:IsA("TextButton") or btn:IsA("ImageButton")) and btn.Visible and btn.AbsoluteSize.X > 0 then
-                                -- Butonun rengini anahtar olarak kaydet
-                                local colorKey = tostring(btn.BackgroundColor3)
-                                if not foundButtons[colorKey] then
-                                    foundButtons[colorKey] = {}
-                                end
-                                table.insert(foundButtons[colorKey], btn)
-                            end
+                if puzzleActive then
+                    -- 2. Sunucuya "Ben çözdüm" paketini gönder (Oyunun gizli Remotelarını tarar)
+                    local remotes = ReplicatedStorage:FindFirstChild("Remotes") or ReplicatedStorage
+                    
+                    for _, r in pairs(remotes:GetDescendants()) do
+                        if r:IsA("RemoteEvent") and (r.Name:lower():find("finish") or r.Name:lower():find("solve") or r.Name:lower():find("complete")) then
+                            r:FireServer(true) -- Sunucuyu kandır
                         end
                     end
-                end
-                
-                -- Aynı renkteki butonları eşleştir ve tıkla
-                for color, buttons in pairs(foundButtons) do
-                    if #buttons >= 2 then
-                        -- 3-7 saniye arası insan taklidi yaparak bekle
-                        task.wait(math.random(1, 2)) 
-                        virtualClick(buttons[1]) -- İlk renkli buton
-                        task.wait(0.2)
-                        virtualClick(buttons[2]) -- İkinci aynı renkli buton (EŞLEŞTİ!)
+                    
+                    -- Alternatif: Bazı oyunlar direkt fonksiyon çağrısı ister
+                    local func = remotes:FindFirstChild("PuzzleComplete")
+                    if func and func:IsA("RemoteFunction") then
+                        func:InvokeServer()
                     end
                 end
             end)
@@ -148,7 +132,7 @@ task.spawn(function()
     end
 end)
 
--- SPEED LOOP
+-- SPEED LOOP (2.1x)
 RunService.Heartbeat:Connect(function()
     pcall(function()
         local char = player.Character
