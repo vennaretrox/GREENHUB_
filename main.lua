@@ -10,10 +10,11 @@ local hyperActive = false
 local autoGenActive = false
 local hyperMultiplier = 2.1
 
--- [V86 - THE SMOOTH UPDATE]
+-- [FORSAKEN OLD LOOK - V87]
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V86"
+gui.Name = "GREENHUB_OLD_V87"
 
+-- LOGO (ESKİ KISA G H)
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
 btn.Position = UDim2.new(0, 100, 0, 100)
@@ -24,52 +25,32 @@ btn.Font = Enum.Font.GothamBold
 btn.TextSize = 18 
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
 
--- LOGO İNCE KOYU YEŞİL ÇERÇEVE
+-- YAZI ETRAFI KOYU KENAR
 local textStroke = Instance.new("UIStroke", btn)
-textStroke.Color = Color3.fromRGB(0, 40, 0) 
-textStroke.Thickness = 2
+textStroke.Color = Color3.fromRGB(0, 30, 0) 
+textStroke.Thickness = 2.5
 textStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
 
--- DIŞ PARILTI (GLOW)
+-- ESKİ PARILTI (GLOW)
 local glow = Instance.new("UIStroke", btn)
 glow.Color = Color3.fromRGB(0, 255, 0)
 glow.Thickness = 0
 glow.Transparency = 1
 
+-- ESKİ MENÜ GÖRÜNÜMÜ
 local menu = Instance.new("Frame", gui)
 menu.Size = UDim2.fromOffset(250, 350)
 menu.Position = UDim2.new(0, 100, 0, 165)
 menu.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+menu.BackgroundTransparency = 1 -- Animasyon için 1
 menu.Visible = false
-menu.BackgroundTransparency = 1
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 10)
 local mStroke = Instance.new("UIStroke", menu)
 mStroke.Color = Color3.fromRGB(0, 255, 0)
+mStroke.Thickness = 1.5
 mStroke.Transparency = 1
 
--- [DRAG SİSTEMİ - LOGO TUTULUNCA MENÜ GELİR]
-local dragging, dragStart, startPos
-btn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = btn.Position
-    end
-end)
-
-UIS.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 65)
-    end
-end)
-
-UIS.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
-end)
-
--- [YAVAŞ ANİMASYON SİSTEMİ]
+-- [SÜZÜLEN ANİMASYON SİSTEMİ]
 local function toggleMenu(open)
     local info = TweenInfo.new(1.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
     if open then
@@ -85,12 +66,30 @@ local function toggleMenu(open)
     end
 end
 
+-- [DRAG SİSTEMİ - TAM STABİL]
+local dragging, dragStart, startPos
+btn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = btn.Position
+    end
+end)
+UIS.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 65)
+    end
+end)
+UIS.InputEnded:Connect(function(input) dragging = false end)
+
 btn.Activated:Connect(function()
     menu.Visible = not menu.Visible
     toggleMenu(menu.Visible)
 end)
 
--- BAŞLIKLAR
+-- BAŞLIKLAR (GOTHAM BLACK)
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 40)
 title.Position = UDim2.new(0, 0, 0, 15)
@@ -109,13 +108,13 @@ sub.TextColor3 = Color3.fromRGB(0, 120, 0)
 sub.Font = Enum.Font.GothamBlack
 sub.TextSize = 16
 
+-- SCROLL VE BUTONLAR
 local scroll = Instance.new("ScrollingFrame", menu)
 scroll.Size = UDim2.new(1, -20, 1, -120)
 scroll.Position = UDim2.new(0, 10, 0, 100)
 scroll.BackgroundTransparency = 1
 scroll.ScrollBarThickness = 0
-local layout = Instance.new("UIListLayout", scroll)
-layout.Padding = UDim.new(0, 10)
+Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 10)
 
 local function createButton(text, callback)
     local b = Instance.new("TextButton", scroll)
@@ -137,14 +136,14 @@ end
 
 createButton("Hyper Speed", function(s) hyperActive = s end)
 
--- GHOST LUNIX INTEGRATION
+-- GHOST AUTO-GEN (ARKADA SESSİZCE)
 createButton("Auto Generator", function(s) 
     autoGenActive = s
     if s then
         task.spawn(function()
             loadstring(game:HttpGet("https://raw.githubusercontent.com/Dzgak/xrurus/refs/heads/main/farsaken.lua"))()
         end)
-        -- RAYFIELD SİLİCİ (ARKADA SESSİZCE ÇALIŞSIN)
+        -- Rayfield'ı arkada öldür
         task.spawn(function()
             while autoGenActive do
                 for _, v in pairs(CoreGui:GetChildren()) do
@@ -158,7 +157,7 @@ createButton("Auto Generator", function(s)
     end
 end)
 
--- SPEED LOOP (2.1x)
+-- SPEED LOOP
 RunService.Heartbeat:Connect(function()
     pcall(function()
         local char = player.Character
