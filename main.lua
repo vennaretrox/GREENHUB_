@@ -10,11 +10,11 @@ local hyperActive = false
 local autoGenActive = false
 local hyperMultiplier = 2.1
 
--- [FORSAKEN OLD LOOK - V87]
+-- [FORSAKEN DESIGN V89]
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_OLD_V87"
+gui.Name = "GREENHUB_V89_GLOW"
 
--- LOGO (ESKİ KISA G H)
+-- LOGO (KISA G H & KOYU DETAY)
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
 btn.Position = UDim2.new(0, 100, 0, 100)
@@ -25,54 +25,61 @@ btn.Font = Enum.Font.GothamBold
 btn.TextSize = 18 
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
 
--- YAZI ETRAFI KOYU KENAR
+-- YAZI ETRAFI KOYU YEŞİL (STREOKE)
 local textStroke = Instance.new("UIStroke", btn)
-textStroke.Color = Color3.fromRGB(0, 30, 0) 
-textStroke.Thickness = 2.5
+textStroke.Color = Color3.fromRGB(0, 35, 0) -- Derin koyu yeşil
+textStroke.Thickness = 2.8
 textStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
 
--- ESKİ PARILTI (GLOW)
+-- ASIL PARLAMA KATMANI (ANIMATED GLOW)
 local glow = Instance.new("UIStroke", btn)
 glow.Color = Color3.fromRGB(0, 255, 0)
 glow.Thickness = 0
 glow.Transparency = 1
 
--- ESKİ MENÜ GÖRÜNÜMÜ
+-- MENÜ TASARIMI
 local menu = Instance.new("Frame", gui)
 menu.Size = UDim2.fromOffset(250, 350)
 menu.Position = UDim2.new(0, 100, 0, 165)
 menu.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
-menu.BackgroundTransparency = 1 -- Animasyon için 1
+menu.BackgroundTransparency = 1
 menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 10)
 local mStroke = Instance.new("UIStroke", menu)
 mStroke.Color = Color3.fromRGB(0, 255, 0)
-mStroke.Thickness = 1.5
 mStroke.Transparency = 1
 
--- [SÜZÜLEN ANİMASYON SİSTEMİ]
-local function toggleMenu(open)
-    local info = TweenInfo.new(1.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+-- [SÜZÜLEN PARLAMA VE MENÜ ANİMASYONU]
+local function toggleEverything(open)
+    -- 1.2 saniyelik süzülme süresi (Senin istediğin o yavaş geçiş)
+    local tweenInfo = TweenInfo.new(1.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+    
     if open then
         menu.Visible = true
-        TweenService:Create(menu, info, {BackgroundTransparency = 0}):Play()
-        TweenService:Create(mStroke, info, {Transparency = 0}):Play()
-        TweenService:Create(glow, info, {Thickness = 4, Transparency = 0.4}):Play()
+        -- Menü ve Logo Parlaması Yavaşça Belirir
+        TweenService:Create(menu, tweenInfo, {BackgroundTransparency = 0}):Play()
+        TweenService:Create(mStroke, tweenInfo, {Transparency = 0}):Play()
+        TweenService:Create(glow, tweenInfo, {Thickness = 5, Transparency = 0.3}):Play()
     else
-        TweenService:Create(menu, info, {BackgroundTransparency = 1}):Play()
-        TweenService:Create(mStroke, info, {Transparency = 1}):Play()
-        TweenService:Create(glow, info, {Thickness = 0, Transparency = 1}):Play()
-        task.delay(1.2, function() if not menu.Visible then menu.Visible = false end end)
+        -- Menü ve Logo Parlaması Yavaşça Söner
+        TweenService:Create(menu, tweenInfo, {BackgroundTransparency = 1}):Play()
+        TweenService:Create(mStroke, tweenInfo, {Transparency = 1}):Play()
+        TweenService:Create(glow, tweenInfo, {Thickness = 0, Transparency = 1}):Play()
+        
+        -- Animasyon bitene kadar objeyi kapatma
+        task.delay(1.2, function()
+            if not menu.Visible then
+                menu.Visible = false
+            end
+        end)
     end
 end
 
--- [DRAG SİSTEMİ - TAM STABİL]
+-- DRAG SİSTEMİ (STABİL)
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = btn.Position
+        dragging = true dragStart = input.Position startPos = btn.Position
     end
 end)
 UIS.InputChanged:Connect(function(input)
@@ -86,10 +93,10 @@ UIS.InputEnded:Connect(function(input) dragging = false end)
 
 btn.Activated:Connect(function()
     menu.Visible = not menu.Visible
-    toggleMenu(menu.Visible)
+    toggleEverything(menu.Visible)
 end)
 
--- BAŞLIKLAR (GOTHAM BLACK)
+-- BAŞLIKLAR
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 40)
 title.Position = UDim2.new(0, 0, 0, 15)
@@ -108,7 +115,6 @@ sub.TextColor3 = Color3.fromRGB(0, 120, 0)
 sub.Font = Enum.Font.GothamBlack
 sub.TextSize = 16
 
--- SCROLL VE BUTONLAR
 local scroll = Instance.new("ScrollingFrame", menu)
 scroll.Size = UDim2.new(1, -20, 1, -120)
 scroll.Position = UDim2.new(0, 10, 0, 100)
@@ -136,28 +142,28 @@ end
 
 createButton("Hyper Speed", function(s) hyperActive = s end)
 
--- GHOST AUTO-GEN (ARKADA SESSİZCE)
+-- [BULDUĞUN GERÇEK AUTO GENERATOR KODU]
 createButton("Auto Generator", function(s) 
     autoGenActive = s
     if s then
         task.spawn(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Dzgak/xrurus/refs/heads/main/farsaken.lua"))()
-        end)
-        -- Rayfield'ı arkada öldür
-        task.spawn(function()
             while autoGenActive do
-                for _, v in pairs(CoreGui:GetChildren()) do
-                    if v:IsA("ScreenGui") and (v.Name:find("Rayfield") or v:FindFirstChild("Main")) then
-                        v.Enabled = false 
+                pcall(function()
+                    if workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Ingame") and workspace.Map.Ingame:FindFirstChild("Map") then
+                        for _, generator in pairs(workspace.Map.Ingame.Map:GetChildren()) do
+                            if generator.Name == "Generator" and generator:FindFirstChild("Remotes") and generator.Remotes:FindFirstChild("RE") then
+                                generator.Remotes.RE:FireServer()
+                            end
+                        end
                     end
-                end
-                task.wait(0.5)
+                end)
+                task.wait(3.0)
             end
         end)
     end
 end)
 
--- SPEED LOOP
+-- SPEED LOOP (SABİT 2.1x)
 RunService.Heartbeat:Connect(function()
     pcall(function()
         local char = player.Character
