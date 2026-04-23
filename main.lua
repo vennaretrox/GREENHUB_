@@ -10,11 +10,11 @@ local hyperActive = false
 local autoGenActive = false
 local hyperMultiplier = 2.1
 
--- [V90 - LOGO ANIMATION FOCUS]
+-- [FORSAKEN DESIGN V91]
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V90"
+gui.Name = "GREENHUB_V91_LOGO_FOCUS"
 
--- LOGO (KISA G H & KOYU ÇERÇEVE)
+-- LOGO (KISA G H & KOYU KENARLIK)
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
 btn.Position = UDim2.new(0, 100, 0, 100)
@@ -27,47 +27,36 @@ Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
 
 -- YAZI ETRAFI KOYU YEŞİL
 local textStroke = Instance.new("UIStroke", btn)
-textStroke.Color = Color3.fromRGB(0, 35, 0) 
+textStroke.Color = Color3.fromRGB(0, 30, 0) 
 textStroke.Thickness = 2.5
 textStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
 
--- İŞTE O PARLAMA (GLOW) KATMANI
+-- İSTEDİĞİN O YAVAŞ PARLAMA (GLOW)
 local glow = Instance.new("UIStroke", btn)
 glow.Color = Color3.fromRGB(0, 255, 0)
 glow.Thickness = 0
-glow.Transparency = 1 -- Başlangıçta tamamen sönük
+glow.Transparency = 1 -- Başlangıçta görünmez
 
--- MENÜ
+-- MENÜ (HIZLI AÇILIR)
 local menu = Instance.new("Frame", gui)
 menu.Size = UDim2.fromOffset(250, 350)
 menu.Position = UDim2.new(0, 100, 0, 165)
 menu.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
-menu.BackgroundTransparency = 1
 menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 10)
-local mStroke = Instance.new("UIStroke", menu)
-mStroke.Color = Color3.fromRGB(0, 255, 0)
-mStroke.Transparency = 1
+Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 255, 0)
 
--- [LOGODAKİ PARLAMA ANİMASYONU]
-local function toggleEffect(open)
+-- [SADECE LOGO PARLAMA ANİMASYONU]
+local function animateLogoGlow(open)
+    -- Parlamanın yavaşça sönmesi/yanması için 1.2 saniyelik süre
     local tweenInfo = TweenInfo.new(1.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
     
     if open then
-        menu.Visible = true
-        -- Menü açılırken PARLAMA YAVAŞÇA GELİR
+        -- Menü açılınca logo yavaşça parlar
         TweenService:Create(glow, tweenInfo, {Thickness = 5, Transparency = 0.3}):Play()
-        TweenService:Create(menu, tweenInfo, {BackgroundTransparency = 0}):Play()
-        TweenService:Create(mStroke, tweenInfo, {Transparency = 0}):Play()
     else
-        -- Menü kapanırken PARLAMA YAVAŞÇA GİDER
+        -- Menü kapanınca logo parlaması yavaşça gider
         TweenService:Create(glow, tweenInfo, {Thickness = 0, Transparency = 1}):Play()
-        TweenService:Create(menu, tweenInfo, {BackgroundTransparency = 1}):Play()
-        TweenService:Create(mStroke, tweenInfo, {Transparency = 1}):Play()
-        
-        task.delay(1.2, function()
-            if not menu.Visible then menu.Visible = false end
-        end)
     end
 end
 
@@ -89,7 +78,7 @@ UIS.InputEnded:Connect(function(input) dragging = false end)
 
 btn.Activated:Connect(function()
     menu.Visible = not menu.Visible
-    toggleEffect(menu.Visible)
+    animateLogoGlow(menu.Visible)
 end)
 
 -- BAŞLIKLAR
@@ -138,7 +127,7 @@ end
 
 createButton("Hyper Speed", function(s) hyperActive = s end)
 
--- [AUTO GENERATOR KODUN]
+-- [SENİN AUTO GENERATOR KODUN]
 createButton("Auto Generator", function(s) 
     autoGenActive = s
     if s then
@@ -153,13 +142,13 @@ createButton("Auto Generator", function(s)
                         end
                     end
                 end)
-                task.wait(3.0)
+                task.wait(3.5)
             end
         end)
     end
 end)
 
--- SPEED
+-- SPEED LOOP
 RunService.Heartbeat:Connect(function()
     pcall(function()
         local char = player.Character
