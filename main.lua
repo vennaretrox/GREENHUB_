@@ -11,48 +11,54 @@ local hyperActive = false
 local autoGenActive = false
 local hyperMultiplier = 2.1
 
--- [TASARIM SİSTEMİ - V76]
+-- [FORSAKEN DESIGN SYSTEM - V78]
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V76_FINAL"
+gui.Name = "GREENHUB_V78"
 
 local btn = Instance.new("TextButton", gui)
-btn.Size = UDim2.fromOffset(60, 60)
+btn.Size = UDim2.fromOffset(65, 65)
 btn.Position = UDim2.new(0, 50, 0, 50)
 btn.Text = "G H"
 btn.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
 btn.TextColor3 = Color3.fromRGB(0, 255, 0)
 btn.Font = Enum.Font.GothamBold
-btn.TextSize = 22
-Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
+btn.TextSize = 26 -- Daha kalın yazı
+Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 15)
 
+-- LOGO KENAR PARLAMASI (YANLAR KOYU)
 local btnStroke = Instance.new("UIStroke", btn)
-btnStroke.Color = Color3.fromRGB(0, 255, 0)
-btnStroke.Thickness = 3
-btnStroke.Transparency = 1 -- Başlangıçta tamamen sönük
+btnStroke.Thickness = 4.5
+btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+btnStroke.Transparency = 1 -- Başlangıçta gizli
 
--- AKILLI PARLAMA (SMART GLOW TRANSITION)
-local function animateGlow(isOpen)
-    local info = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
-    if isOpen then
-        -- Yavaşça parlasın
-        TweenService:Create(btnStroke, info, {Transparency = 0.2, Thickness = 4}):Play()
-    else
-        -- Yavaşça sönsün
-        TweenService:Create(btnStroke, info, {Transparency = 1, Thickness = 2}):Play()
-    end
-end
+local strokeGradient = Instance.new("UIGradient", btnStroke)
+strokeGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 30, 0)), -- Yanlar Koyu
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 0)), -- Orta Parlak
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 30, 0))  -- Yanlar Koyu
+})
 
 local menu = Instance.new("Frame", gui)
 menu.Size = UDim2.fromOffset(250, 350)
-menu.Position = UDim2.new(0, 50, 0, 120)
+menu.Position = UDim2.new(0, 50, 0, 130)
 menu.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
 menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 10)
 Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 255, 0)
 
+-- SMART GLOW ANIMATION
+local function toggleGlow(isOpen)
+    local info = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+    if isOpen then
+        TweenService:Create(btnStroke, info, {Transparency = 0}):Play()
+    else
+        TweenService:Create(btnStroke, info, {Transparency = 1}):Play()
+    end
+end
+
 btn.Activated:Connect(function()
     menu.Visible = not menu.Visible
-    animateGlow(menu.Visible)
+    toggleGlow(menu.Visible)
 end)
 
 -- BAŞLIKLAR
@@ -72,17 +78,17 @@ sub.BackgroundTransparency = 1
 sub.Text = "forsaken"
 sub.TextColor3 = Color3.fromRGB(0, 120, 0)
 sub.Font = Enum.Font.GothamBlack
-sub.TextSize = 15
+sub.TextSize = 16
 
--- DRAG SYSTEM
+-- DRAG
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = input.Position startPos = btn.Position end end)
-UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then local delta = input.Position - dragStart btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 70) end end)
+UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then local delta = input.Position - dragStart btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 80) end end)
 UIS.InputEnded:Connect(function(input) dragging = false end)
 
 local scroll = Instance.new("ScrollingFrame", menu)
 scroll.Size = UDim2.new(1, -20, 1, -120)
-scroll.Position = UDim2.new(0, 10, 0, 95)
+scroll.Position = UDim2.new(0, 10, 0, 100)
 scroll.BackgroundTransparency = 1
 scroll.ScrollBarThickness = 0
 Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 10)
@@ -109,25 +115,24 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Auto Generator", function(s) autoGenActive = s end)
 
 --------------------------------------------------
--- REAL FORSAKEN GEN LOGIC (LINK BASED)
+-- ASIL JENERATÖR KODU (LINKTEKİ MANTIK)
 --------------------------------------------------
 
 task.spawn(function()
     while task.wait(0.1) do
         if autoGenActive then
             pcall(function()
-                -- Attığın scriptin kullandığı o meşhur jeneratör bypass kodu
-                local remotes = ReplicatedStorage:FindFirstChild("RemoteEvent") or ReplicatedStorage:FindFirstChild("Events")
-                if remotes then
-                    -- Jeneratördeki 'Wire' (Kablo) ve 'Color' (Renk) puzzlelarını kandırır
-                    remotes:FireServer("Generator", "Complete")
-                    remotes:FireServer("Repair", true)
-                    
-                    -- Alternatif: Puzzle UI açıksa onu direkt kapatıp ödülü verdirir
-                    local pGui = player.PlayerGui
-                    if pGui:FindFirstChild("GeneratorUI") or pGui:FindFirstChild("Puzzle") then
-                        -- Bu kısım linkteki gizli sinyaldir
-                        game:GetService("ReplicatedStorage").MainRemote:FireServer("FinishedPuzzle", true)
+                -- Oyunun jeneratör puzzle klasörünü ve sinyalini hedefliyoruz
+                local mainRemote = ReplicatedStorage:FindFirstChild("MainEvent") or ReplicatedStorage:FindFirstChild("RemoteEvent")
+                
+                -- Puzzle ekranı her açıldığında oyuna "Tamam" sinyali gönderir
+                for _, g in pairs(player.PlayerGui:GetChildren()) do
+                    if g.Name:find("Puzzle") or g.Name:find("Gen") then
+                        -- Bu kısım o linkteki gizli tetikleyicidir:
+                        if mainRemote then
+                            mainRemote:FireServer("FinishedPuzzle", true)
+                            mainRemote:FireServer("GeneratorRepair", "Success")
+                        end
                     end
                 end
             end)
@@ -135,7 +140,7 @@ task.spawn(function()
     end
 end)
 
--- SPEED LOOP (2.1x)
+-- SPEED LOOP
 RunService.Heartbeat:Connect(function()
     pcall(function()
         local char = player.Character
