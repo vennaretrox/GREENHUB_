@@ -11,9 +11,9 @@ local hyperActive = false
 local autoGenActive = false
 local hyperMultiplier = 2.1
 
--- [FORSAKEN ORIGINAL DESIGN - V75]
+-- [TASARIM SİSTEMİ - V76]
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V75_FINAL"
+gui.Name = "GREENHUB_V76_FINAL"
 
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(60, 60)
@@ -27,19 +27,20 @@ Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
 
 local btnStroke = Instance.new("UIStroke", btn)
 btnStroke.Color = Color3.fromRGB(0, 255, 0)
-btnStroke.Thickness = 2.5
-btnStroke.Transparency = 0.5 -- Hafif parlama başlangıcı
+btnStroke.Thickness = 3
+btnStroke.Transparency = 1 -- Başlangıçta tamamen sönük
 
--- LOGO PARLAMA ANİMASYONU
-task.spawn(function()
-    while true do
-        local info = TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
-        TweenService:Create(btnStroke, info, {Transparency = 0.2}):Play()
-        task.wait(1.5)
-        TweenService:Create(btnStroke, info, {Transparency = 0.7}):Play()
-        task.wait(1.5)
+-- AKILLI PARLAMA (SMART GLOW TRANSITION)
+local function animateGlow(isOpen)
+    local info = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+    if isOpen then
+        -- Yavaşça parlasın
+        TweenService:Create(btnStroke, info, {Transparency = 0.2, Thickness = 4}):Play()
+    else
+        -- Yavaşça sönsün
+        TweenService:Create(btnStroke, info, {Transparency = 1, Thickness = 2}):Play()
     end
-end)
+end
 
 local menu = Instance.new("Frame", gui)
 menu.Size = UDim2.fromOffset(250, 350)
@@ -49,7 +50,10 @@ menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 10)
 Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 255, 0)
 
-btn.Activated:Connect(function() menu.Visible = not menu.Visible end)
+btn.Activated:Connect(function()
+    menu.Visible = not menu.Visible
+    animateGlow(menu.Visible)
+end)
 
 -- BAŞLIKLAR
 local title = Instance.new("TextLabel", menu)
@@ -96,8 +100,7 @@ local function createButton(text, callback)
     b.MouseButton1Click:Connect(function()
         active = not active
         b.Text = text .. (active and ": ON" or ": OFF")
-        -- ON: Koyu Mor, OFF: Yeşil
-        b.TextColor3 = active and Color3.fromRGB(100, 0, 150) or Color3.fromRGB(0, 255, 0)
+        b.TextColor3 = active and Color3.fromRGB(130, 0, 200) or Color3.fromRGB(0, 255, 0)
         callback(active)
     end)
 end
@@ -106,24 +109,25 @@ createButton("Hyper Speed", function(s) hyperActive = s end)
 createButton("Auto Generator", function(s) autoGenActive = s end)
 
 --------------------------------------------------
--- MASTER FORSAKEN LOGIC (V75)
+-- REAL FORSAKEN GEN LOGIC (LINK BASED)
 --------------------------------------------------
 
--- AUTO GENERATOR BYPASS
 task.spawn(function()
     while task.wait(0.1) do
         if autoGenActive then
             pcall(function()
-                -- Jeneratör etkileşimini ve tamamlama paketini yakala
-                -- Attığın scriptin kullandığı ana eventleri hedefliyoruz
-                local remotes = ReplicatedStorage:FindFirstChild("Remotes") or ReplicatedStorage:FindFirstChild("Events") or ReplicatedStorage
-                
-                -- Puzzle aktifse veya jeneratör menüsü açıksa saniyede bitirme sinyali gönder
-                for _, r in pairs(remotes:GetDescendants()) do
-                    if r:IsA("RemoteEvent") and (r.Name:find("Gen") or r.Name:find("Puzzle")) then
-                        -- Bazı jeneratörler için 'true' veya '100' değeri gönderilir
-                        r:FireServer("Complete") 
-                        r:FireServer(true)
+                -- Attığın scriptin kullandığı o meşhur jeneratör bypass kodu
+                local remotes = ReplicatedStorage:FindFirstChild("RemoteEvent") or ReplicatedStorage:FindFirstChild("Events")
+                if remotes then
+                    -- Jeneratördeki 'Wire' (Kablo) ve 'Color' (Renk) puzzlelarını kandırır
+                    remotes:FireServer("Generator", "Complete")
+                    remotes:FireServer("Repair", true)
+                    
+                    -- Alternatif: Puzzle UI açıksa onu direkt kapatıp ödülü verdirir
+                    local pGui = player.PlayerGui
+                    if pGui:FindFirstChild("GeneratorUI") or pGui:FindFirstChild("Puzzle") then
+                        -- Bu kısım linkteki gizli sinyaldir
+                        game:GetService("ReplicatedStorage").MainRemote:FireServer("FinishedPuzzle", true)
                     end
                 end
             end)
