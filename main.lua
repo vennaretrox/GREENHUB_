@@ -4,45 +4,50 @@ local CoreGui = game:GetService("CoreGui")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
 local hyperActive = false
 local autoGenActive = false
 local hyperMultiplier = 2.1
 
--- [FORSAKEN ORIGINAL DESIGN - V80]
+-- [TASARIM V84 - EXACT REPLICA]
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V80_REPLICA"
+gui.Name = "GREENHUB_V84"
 
 local btn = Instance.new("TextButton", gui)
-btn.Size = UDim2.fromOffset(60, 60)
+btn.Size = UDim2.fromOffset(55, 55)
 btn.Position = UDim2.new(0, 50, 0, 50)
 btn.Text = "G H"
 btn.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
 btn.TextColor3 = Color3.fromRGB(0, 255, 0)
 btn.Font = Enum.Font.GothamBold
-btn.TextSize = 22
-Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
+btn.TextSize = 18 -- Kısa G H
+Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
 
-local btnStroke = Instance.new("UIStroke", btn)
-btnStroke.Color = Color3.fromRGB(0, 255, 0)
-btnStroke.Thickness = 2.5
-btnStroke.Transparency = 1 -- Sönük başlar
+-- YAZI ETRAFI İNCE KOYU YEŞİL (STREOKE)
+local textStroke = Instance.new("UIStroke", btn)
+textStroke.Color = Color3.fromRGB(0, 40, 0) 
+textStroke.Thickness = 1.8
+textStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
 
--- YAVAŞ PARLAMA FONKSİYONU
-local function toggleGlow(state)
-    local info = TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+-- HIZLI PARLAMA (0.3s)
+local glow = Instance.new("UIStroke", btn)
+glow.Color = Color3.fromRGB(0, 255, 0)
+glow.Thickness = 0
+glow.Transparency = 1
+
+local function fastGlow(state)
+    local info = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
     if state then
-        TweenService:Create(btnStroke, info, {Transparency = 0.3, Thickness = 4}):Play()
+        TweenService:Create(glow, info, {Thickness = 4, Transparency = 0.4}):Play()
     else
-        TweenService:Create(btnStroke, info, {Transparency = 1, Thickness = 2.5}):Play()
+        TweenService:Create(glow, info, {Thickness = 0, Transparency = 1}):Play()
     end
 end
 
 local menu = Instance.new("Frame", gui)
 menu.Size = UDim2.fromOffset(250, 350)
-menu.Position = UDim2.new(0, 50, 0, 120)
+menu.Position = UDim2.new(0, 50, 0, 115)
 menu.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
 menu.Visible = false
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 10)
@@ -50,10 +55,10 @@ Instance.new("UIStroke", menu).Color = Color3.fromRGB(0, 255, 0)
 
 btn.Activated:Connect(function()
     menu.Visible = not menu.Visible
-    toggleGlow(menu.Visible)
+    fastGlow(menu.Visible)
 end)
 
--- BAŞLIKLAR (GOTHAMBLACK FORSAKEN)
+-- BAŞLIKLAR
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 40)
 title.Position = UDim2.new(0, 0, 0, 15)
@@ -70,17 +75,17 @@ sub.BackgroundTransparency = 1
 sub.Text = "forsaken"
 sub.TextColor3 = Color3.fromRGB(0, 120, 0)
 sub.Font = Enum.Font.GothamBlack
-sub.TextSize = 15
+sub.TextSize = 16
 
 -- DRAG
 local dragging, dragStart, startPos
 btn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = input.Position startPos = btn.Position end end)
-UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then local delta = input.Position - dragStart btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 70) end end)
+UIS.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then local delta = input.Position - dragStart btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 65) end end)
 UIS.InputEnded:Connect(function(input) dragging = false end)
 
 local scroll = Instance.new("ScrollingFrame", menu)
 scroll.Size = UDim2.new(1, -20, 1, -120)
-scroll.Position = UDim2.new(0, 10, 0, 100)
+scroll.Position = UDim2.new(0, 10, 0, 95)
 scroll.BackgroundTransparency = 1
 scroll.ScrollBarThickness = 0
 Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 10)
@@ -103,35 +108,17 @@ local function createButton(text, callback)
     end)
 end
 
+-- SPEED (2.1x)
 createButton("Hyper Speed", function(s) hyperActive = s end)
-createButton("Auto Generator", function(s) autoGenActive = s end)
 
---------------------------------------------------
--- REAL FORSAKEN GEN CODE (LINK REPLICA)
---------------------------------------------------
-
-task.spawn(function()
-    while task.wait(0.5) do
-        if autoGenActive then
-            pcall(function()
-                -- Attığın scriptteki asıl jeneratör tamir mantığı:
-                -- Kabloları (Wires) bulur ve her birini 'Correct' (Doğru) olarak işaretler
-                local gui = player.PlayerGui:FindFirstChild("Puzzle") or player.PlayerGui:FindFirstChild("GeneratorUI")
-                
-                if gui and gui.Enabled then
-                    local mainRemote = ReplicatedStorage:FindFirstChild("MainEvent") or ReplicatedStorage:FindFirstChild("RemoteEvent")
-                    
-                    -- Linkteki scriptin yaptığı gibi kabloları tek tek "geçildi" sayıyoruz
-                    for i = 1, 4 do -- Forsaken'da genelde 4 kablo olur
-                        task.wait(0.1)
-                        if mainRemote then
-                            mainRemote:FireServer("WireSuccess", i) 
-                            mainRemote:FireServer("FinishedPuzzle", true)
-                        end
-                    end
-                end
-            end)
-        end
+-- LUNIX AUTO GEN INTEGRATION
+createButton("Auto Generator", function(s) 
+    autoGenActive = s
+    if s then
+        -- Madem Lunix'in kodu sende çalışıyor, butona basınca onu çağırıyoruz!
+        pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/Dzgak/xrurus/refs/heads/main/farsaken.lua"))()
+        end)
     end
 end)
 
