@@ -10,13 +10,13 @@ local hyperActive = false
 local autoGenActive = false
 local hyperMultiplier = 2.1
 
--- [V85 - GHOST ENGINE & SMOOTH UI]
+-- [V86 - THE SMOOTH UPDATE]
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "GREENHUB_V85"
+gui.Name = "GREENHUB_V86"
 
 local btn = Instance.new("TextButton", gui)
 btn.Size = UDim2.fromOffset(55, 55)
-btn.Position = UDim2.new(0, 50, 0, 50)
+btn.Position = UDim2.new(0, 100, 0, 100)
 btn.Text = "G H"
 btn.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
 btn.TextColor3 = Color3.fromRGB(0, 255, 0)
@@ -24,13 +24,13 @@ btn.Font = Enum.Font.GothamBold
 btn.TextSize = 18 
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
 
--- YAZI ETRAFI KOYU YEŞİL
+-- LOGO İNCE KOYU YEŞİL ÇERÇEVE
 local textStroke = Instance.new("UIStroke", btn)
 textStroke.Color = Color3.fromRGB(0, 40, 0) 
 textStroke.Thickness = 2
 textStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
 
--- YAVAŞ PARILTI SİSTEMİ
+-- DIŞ PARILTI (GLOW)
 local glow = Instance.new("UIStroke", btn)
 glow.Color = Color3.fromRGB(0, 255, 0)
 glow.Thickness = 0
@@ -38,16 +38,38 @@ glow.Transparency = 1
 
 local menu = Instance.new("Frame", gui)
 menu.Size = UDim2.fromOffset(250, 350)
-menu.Position = UDim2.new(0, 50, 0, 115)
+menu.Position = UDim2.new(0, 100, 0, 165)
 menu.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
-menu.BackgroundTransparency = 1 -- Başlangıçta görünmez
 menu.Visible = false
+menu.BackgroundTransparency = 1
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 10)
 local mStroke = Instance.new("UIStroke", menu)
 mStroke.Color = Color3.fromRGB(0, 255, 0)
 mStroke.Transparency = 1
 
--- YAVAŞ AÇILIŞ/KAPANIŞ ANİMASYONU
+-- [DRAG SİSTEMİ - LOGO TUTULUNCA MENÜ GELİR]
+local dragging, dragStart, startPos
+btn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = btn.Position
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        menu.Position = UDim2.new(btn.Position.X.Scale, btn.Position.X.Offset, btn.Position.Y.Scale, btn.Position.Y.Offset + 65)
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+end)
+
+-- [YAVAŞ ANİMASYON SİSTEMİ]
 local function toggleMenu(open)
     local info = TweenInfo.new(1.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
     if open then
@@ -59,7 +81,7 @@ local function toggleMenu(open)
         TweenService:Create(menu, info, {BackgroundTransparency = 1}):Play()
         TweenService:Create(mStroke, info, {Transparency = 1}):Play()
         TweenService:Create(glow, info, {Thickness = 0, Transparency = 1}):Play()
-        task.delay(1.2, function() if not autoGenActive then menu.Visible = false end end)
+        task.delay(1.2, function() if not menu.Visible then menu.Visible = false end end)
     end
 end
 
@@ -87,13 +109,13 @@ sub.TextColor3 = Color3.fromRGB(0, 120, 0)
 sub.Font = Enum.Font.GothamBlack
 sub.TextSize = 16
 
--- DRAG & LIST LAYOUT (HIZLI GEÇİLDİ)
 local scroll = Instance.new("ScrollingFrame", menu)
 scroll.Size = UDim2.new(1, -20, 1, -120)
 scroll.Position = UDim2.new(0, 10, 0, 100)
 scroll.BackgroundTransparency = 1
 scroll.ScrollBarThickness = 0
-Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 10)
+local layout = Instance.new("UIListLayout", scroll)
+layout.Padding = UDim.new(0, 10)
 
 local function createButton(text, callback)
     local b = Instance.new("TextButton", scroll)
@@ -115,27 +137,22 @@ end
 
 createButton("Hyper Speed", function(s) hyperActive = s end)
 
--- GHOST AUTO-GENERATOR (LUNIX INVISIBLE)
+-- GHOST LUNIX INTEGRATION
 createButton("Auto Generator", function(s) 
     autoGenActive = s
     if s then
-        -- Arka planda Lunix'i çalıştır
         task.spawn(function()
             loadstring(game:HttpGet("https://raw.githubusercontent.com/Dzgak/xrurus/refs/heads/main/farsaken.lua"))()
         end)
-        
-        -- TÜM RAYFIELD UI'LARINI ANINDA YOK ET (GÖRÜNMEZ YAP)
+        -- RAYFIELD SİLİCİ (ARKADA SESSİZCE ÇALIŞSIN)
         task.spawn(function()
             while autoGenActive do
                 for _, v in pairs(CoreGui:GetChildren()) do
-                    if v.Name:find("Rayfield") or v:FindFirstChild("Main") then
-                        v.Enabled = false -- Menüyü gizle ama kodun çalışmasına izin ver
+                    if v:IsA("ScreenGui") and (v.Name:find("Rayfield") or v:FindFirstChild("Main")) then
+                        v.Enabled = false 
                     end
                 end
-                for _, v in pairs(player.PlayerGui:GetChildren()) do
-                    if v.Name:find("Rayfield") then v.Enabled = false end
-                end
-                task.wait(0.1)
+                task.wait(0.5)
             end
         end)
     end
