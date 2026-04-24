@@ -142,7 +142,7 @@ createButton("Auto Generator", function(s)
                         end
                     end
                 end)
-                task.wait(3.5)
+                task.wait(1.5)
             end
         end)
     end
