@@ -72,7 +72,7 @@ btn.Activated:Connect(function()
     
     TweenService:Create(btnStroke, tweenInfo, {
         Color = isVis and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 40, 0),
-        Thickness = isVis and 4.1 or 2.5
+        Thickness = isVis and 3.5 or 2.5
     }):Play()
 end)
 
@@ -126,7 +126,7 @@ createButton("Auto Generator", function(val)
                         end
                     end
                 end)
-                task.wait(3.5)
+                task.wait(1.5)
             end
         end)
     end
